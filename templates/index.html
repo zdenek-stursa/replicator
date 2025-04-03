@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="cs" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replicator - Image Generator</title>
+
+    <link rel="icon" type="image/png" href="/static/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/static/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/static/favicon/site.webmanifest" />
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bs-body-bg: #1a1a1a;
+            --bs-body-color: #e0e0e0;
+        }
+        
+        body {
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+        
+        .form-control, .form-select {
+            background-color: #222222;
+            border-color: #404040;
+            color: #e0e0e0;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #222222;
+            border-color: #505050;
+            color: #e0e0e0;
+        }
+        
+        .card {
+            background-color: #2a2a2a;
+            border-color: #404040;
+        }
+        
+        .btn-primary, #improvePrompt, .page-link {
+            background-color: #373636;
+            border-color: #403030;
+            color: white;
+        }
+        
+        .btn-primary:hover, #improvePrompt:hover, .page-link:hover {
+            background-color: #222222;
+            border-color: #302424;
+            color: white;
+        }
+
+        .btn-primary:focus, #improvePrompt:focus, .page-link:focus, .btn-primary:active {
+            background-color: #222222;
+            border-color: #302424;
+            color: white;
+            box-shadow: 0 0 0 0.25rem rgba(48, 36, 36, 0.25);
+        }
+
+        #improvePrompt {
+            font-weight: 500;
+        }
+
+        .page-link {
+            padding: 0.5rem 0.75rem;
+        }
+
+        .page-item.active .page-link {
+            background-color: #2a2a2a;
+            border-color: #302424;
+        }
+
+        .page-item.disabled .page-link {
+            background-color: #2a2a2a;
+            border-color: #302424;
+            color: #6c757d;
+        }
+        
+        .image-card {
+            position: relative;
+            overflow: hidden;
+            padding-bottom: 100%; /* Vytvoří čtvercový kontejner */
+            background-color: #1a1a1a;
+        }
+
+        .image-card .ambient-background {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.7);
+            opacity: 0.6;
+            transform: scale(1.1);
+            z-index: 0;
+        }
+
+        .image-card img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Zachová poměr stran */
+            z-index: 1; /* Zajistí, že obrázek bude nad rozmazaným pozadím */
+        }
+        
+        .image-card .overlay {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            transition: bottom 0.3s ease-in-out;
+            z-index: 2;
+        }
+        
+        .image-card:hover .overlay {
+            bottom: 0;
+        }
+        
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+            margin: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10001;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .modal-close:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .image-card img {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal">
+        <div class="modal-close">
+            <i class="fas fa-times"></i>
+        </div>
+        <img id="modalImage" src="" alt="Full size image">
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Načítání...</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container py-4">
+        <!-- Header -->
+        <header class="pb-3 mb-4 border-bottom">
+            <h1 class="display-5 fw-bold">Replicator</h1>
+            <p class="lead">Generátor obrázků pomocí AI modelů</p>
+        </header>
+
+        <!-- Image Generation Form -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="generationForm">
+                            <div class="mb-3">
+                                <label for="prompt" class="form-label">Prompt</label>
+                                <!-- Responzivní kontejner: sloupec na mobilu, řádek od 'md' výše -->
+                                <div class="d-flex flex-column flex-md-row">
+                                    <!-- Textarea: roste na desktopu, plná šířka a mezera dole na mobilu -->
+                                    <textarea class="form-control flex-grow-1 mb-2 mb-md-0" id="prompt" rows="6" style="resize: vertical;" required></textarea>
+                                    <!-- Tlačítko: auto šířka a mezera vlevo na desktopu, plná šířka na mobilu -->
+                                    <button class="btn btn-outline-secondary w-md-auto ms-md-2" type="button" id="improvePrompt">
+                                        <i class="fa fa-magic"></i> Vylepšit
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 mb-3"> <!-- Make model select full width -->
+                                    <label for="modelSelect" class="form-label">Model</label>
+                                    <select class="form-select" id="modelSelect" required>
+                                        <option value="" disabled selected>Načítání modelů...</option>
+                                        <!-- Models will be loaded here by JS -->
+                                    </select>
+                                </div>
+                                <!-- Aspect ratio select removed, parameters will be dynamic -->
+                            </div>
+                            <!-- Container for dynamically generated model parameters -->
+                            <div id="modelParamsContainer" class="row mb-3">
+                                <!-- Parameters will be loaded here by JS -->
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary" id="generateBtn">
+                                    <i class="fas fa-image me-2"></i>Generovat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Gallery -->
+        <div class="row mb-4" id="imageGallery">
+            <!-- Images will be dynamically inserted here -->
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Gallery pagination" class="d-flex justify-content-center">
+            <ul class="pagination" id="galleryPagination">
+                <!-- Pagination will be dynamically inserted here -->
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Potvrzení smazání</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Opravdu chcete smazat tento obrázek?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Smazat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chyba</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zavřít</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
