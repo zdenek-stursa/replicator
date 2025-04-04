@@ -75,6 +75,7 @@ RUN echo '#!/bin/bash\n\
 set -e\n\
 echo "Starting Redis server as root..."\n\
 service redis-server start || { echo >&2 "Failed to start redis-server"; exit 1; }\n\
+chown -R appuser:appuser /app\n\
 # Drop privileges and execute Gunicorn as appuser\n\
 echo "Starting Gunicorn as appuser on ${GUNICORN_HOST}:${GUNICORN_PORT} with ${GUNICORN_WORKERS} workers..."\n\
 # Use exec to replace the shell process with gunicorn\n\
