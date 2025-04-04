@@ -3,3 +3,4 @@ venv
 images
 metadata
 app.log
+__pychache__
