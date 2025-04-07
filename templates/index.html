@@ -115,17 +115,31 @@
         
         .image-card .overlay {
             position: absolute;
-            bottom: -100%;
+            bottom: -100%; /* Hidden by default on larger screens */
             left: 0;
             right: 0;
             background-color: rgba(0, 0, 0, 0.5);
             padding: 1rem;
-            transition: bottom 0.3s ease-in-out;
+            transition: bottom 0.3s ease-in-out; /* Restore transition */
             z-index: 2;
         }
         
+        /* Restore hover effect for larger screens */
         .image-card:hover .overlay {
             bottom: 0;
+        }
+
+        /* Media query for smaller screens (mobile) */
+        @media (max-width: 767.98px) {
+            .image-card .overlay {
+                bottom: 0; /* Always visible on mobile */
+                transition: none; /* Disable transition on mobile */
+            }
+            /* No need for hover rule on mobile as it's always visible */
+
+            #generateBtn {
+                width: 100%; /* Plná šířka na mobilu */
+            }
         }
         
         .image-modal {
@@ -156,7 +170,7 @@
             color: white;
             font-size: 24px;
             cursor: pointer;
-            z-index: 10001;
+            z-index: 10002; /* Ensure close button is above nav arrows */
             width: 40px;
             height: 40px;
             display: flex;
@@ -184,8 +198,48 @@
             z-index: 9999;
         }
 
+        /* Styles for Modal Navigation */
+        .modal-nav {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 10%; /* Set width to 10% */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0); /* Icon initially transparent */
+            background-color: rgba(0, 0, 0, 0); /* Background initially transparent */
+            transition: all 0.3s ease;
+            z-index: 10001; /* Below close button, above image */
+            font-size: 2rem; /* Adjust icon size */
+        }
+
+        .modal-nav-prev {
+            left: 0;
+            justify-content: flex-start; /* Align icon left */
+            padding-left: 20px;
+        }
+
+        .modal-nav-next {
+            right: 0;
+            justify-content: flex-end; /* Align icon right */
+            padding-right: 20px;
+        }
+
+        .modal-nav:hover {
+            color: rgba(255, 255, 255, 0.8); /* Icon visible on hover */
+            background-color: rgba(0, 0, 0, 0.3); /* Slight background on hover */
+        }
+
         .image-card img {
             cursor: pointer;
+        }
+
+        #generateBtn {
+            padding-top: 0.75rem; /* Zvětšení horního paddingu */
+            padding-bottom: 0.75rem; /* Zvětšení dolního paddingu */
+            font-size: 1.1rem; /* Mírné zvětšení písma pro lepší proporce */
         }
     </style>
 </head>
@@ -195,13 +249,23 @@
         <div class="modal-close">
             <i class="fas fa-times"></i>
         </div>
+        <!-- Navigation Arrows/Areas -->
+        <div class="modal-nav modal-nav-prev" title="Předchozí obrázek">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+        <div class="modal-nav modal-nav-next" title="Další obrázek">
+            <i class="fas fa-chevron-right"></i>
+        </div>
         <img id="modalImage" src="" alt="Full size image">
     </div>
 
     <!-- Loading Spinner -->
     <div class="spinner-overlay" id="spinnerOverlay">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Načítání...</span>
+        <div class="d-flex flex-column align-items-center"> <!-- Flex container for spinner and text -->
+            <div class="spinner-border text-light mb-2" role="status"> <!-- Added margin-bottom -->
+                <span class="visually-hidden">Načítání...</span>
+            </div>
+            <span id="spinner-text" class="text-light"></span> <!-- Element for dynamic text -->
         </div>
     </div>
 

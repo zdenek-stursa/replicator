@@ -2,6 +2,8 @@
 const STORAGE_KEY = 'replicate-ai-form';
 let currentPage = 1;
 let isGenerating = false;
+let modalImages = []; // Array to store image filenames for modal navigation
+let currentModalIndex = -1; // Index of the currently displayed image in the modal
 
 // DOM Elements
 const $form = $('#generationForm');
@@ -15,7 +17,10 @@ const $pagination = $('#galleryPagination');
 const $spinner = $('#spinnerOverlay');
 const errorModal = new bootstrap.Modal('#errorModal');
 const deleteModal = new bootstrap.Modal('#deleteModal'); // Ensure delete modal is initialized
-
+const $imageModal = $('#imageModal');
+const $modalImage = $('#modalImage');
+const $modalNavPrev = $('.modal-nav-prev');
+const $modalNavNext = $('.modal-nav-next');
 // Load saved form state
 // Load only prompt and selected model from state
 function loadFormState() {
@@ -48,15 +53,20 @@ function showError(message) {
     errorModal.show();
 }
 
-// Toggle loading state
-function toggleLoading(show) {
+// Toggle loading state with optional text
+function toggleLoading(show, text = '') { // Added text parameter
+    const $spinnerText = $('#spinner-text'); // Get the text element
     if (show) {
+        $spinnerText.text(text); // Set the text
         $spinner.css('display', 'flex');
         $generateBtn.prop('disabled', true);
+        $improveBtn.prop('disabled', true); // Disable improve button too
         isGenerating = true;
     } else {
+        $spinnerText.text(''); // Clear the text
         $spinner.css('display', 'none');
         $generateBtn.prop('disabled', false);
+        $improveBtn.prop('disabled', false); // Re-enable improve button
         isGenerating = false;
     }
 }
@@ -272,7 +282,7 @@ async function loadModelParams(modelId) {
         $modelParamsContainer.empty();
         return;
     }
-    toggleLoading(true);
+    toggleLoading(true, 'Načítání parametrů...'); // Add text for loading params
     $modelParamsContainer.html('<p class="text-muted">Načítání parametrů...</p>');
     try {
         // Encode the model ID properly for the URL path
@@ -339,7 +349,9 @@ async function loadModels() {
 // Generate image using dynamic parameters
 async function generateImage(prompt, modelId, parameters) {
     try {
-        toggleLoading(true);
+        // For generation, backend handles both translation and generation.
+        // We'll show a general message.
+        toggleLoading(true, 'Generuji obrázek...');
 
         const payload = {
             prompt: prompt,
@@ -378,7 +390,7 @@ async function generateImage(prompt, modelId, parameters) {
 // Improve prompt
 async function improvePrompt(prompt) {
     try {
-        toggleLoading(true);
+        toggleLoading(true, 'Vylepšuji prompt...'); // Add text for improving prompt
         
         const response = await fetch('/api/improve-prompt', {
             method: 'POST',
@@ -417,6 +429,126 @@ async function deleteImage(imageId) {
         showError('Chyba při mazání obrázku: ' + error.message);
     }
 }
+
+
+// --- Modal Navigation Logic ---
+
+// Function to show specific image in modal
+function showModalImage(index) {
+    if (modalImages.length === 0) return; // No images to show
+
+    // Handle index wrapping
+    currentModalIndex = (index + modalImages.length) % modalImages.length;
+
+    const imageFilename = modalImages[currentModalIndex];
+    $modalImage.attr('src', `/images/${imageFilename}`);
+
+    // Optional: Preload next/prev images for smoother transition (can be added later if needed)
+}
+
+// Function to open the image modal
+function openImageModal(clickedImageSrc) {
+    // Populate modalImages from the current gallery view
+    modalImages = [];
+    $gallery.find('.card-img-top').each(function() {
+        // Extract filename from src: "/images/filename.webp" -> "filename.webp"
+        const src = $(this).attr('src');
+        const filename = src.split('/').pop();
+        if (filename) {
+            modalImages.push(filename);
+        }
+    });
+
+    // Find the index of the clicked image
+    const clickedFilename = clickedImageSrc.split('/').pop();
+    currentModalIndex = modalImages.findIndex(filename => filename === clickedFilename);
+
+    if (currentModalIndex === -1) {
+        console.error("Clicked image not found in current gallery list.");
+        // Fallback: just show the clicked image without navigation
+        $modalImage.attr('src', clickedImageSrc);
+        modalImages = [clickedFilename]; // Set only the clicked one
+        currentModalIndex = 0;
+    } else {
+        showModalImage(currentModalIndex); // Show the clicked image using the new function
+    }
+
+    $imageModal.css('display', 'flex'); // Show the modal
+
+    // Add keyboard listener when modal opens
+    $(document).on('keydown.modalNav', handleModalKeydown);
+    // Add touch listeners when modal opens
+    $imageModal.on('touchstart.modalNav', handleTouchStart);
+    $imageModal.on('touchmove.modalNav', handleTouchMove);
+    $imageModal.on('touchend.modalNav', handleTouchEnd);
+}
+
+// Function to close the image modal
+function closeImageModal() {
+    $imageModal.css('display', 'none');
+    $modalImage.attr('src', ''); // Clear image source
+    modalImages = []; // Clear the image list
+    currentModalIndex = -1;
+    // Remove listeners when modal closes
+    $(document).off('keydown.modalNav');
+    $imageModal.off('touchstart.modalNav touchmove.modalNav touchend.modalNav');
+}
+
+// Event Handlers for Navigation
+// Keyboard Navigation
+function handleModalKeydown(e) {
+    if ($imageModal.css('display') === 'flex') { // Only act if modal is visible
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault(); // Prevent browser back navigation if modal is focused
+            showModalImage(currentModalIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault(); // Prevent default scroll
+            showModalImage(currentModalIndex + 1);
+        } else if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    }
+}
+
+// Touch Navigation (Swipe)
+let touchStartX = 0;
+let touchEndX = 0;
+const swipeThreshold = 50; // Minimum distance for a swipe
+
+function handleTouchStart(e) {
+    // Prevent default scroll/zoom behavior during swipe detection
+    // e.preventDefault();
+    touchStartX = e.originalEvent.touches[0].clientX;
+    touchEndX = 0; // Reset end coordinate on new touch start
+}
+
+function handleTouchMove(e) {
+    // e.preventDefault(); // Prevent scroll while swiping
+    touchEndX = e.originalEvent.touches[0].clientX;
+}
+
+function handleTouchEnd(e) {
+    // e.preventDefault();
+    if (touchStartX === 0 || touchEndX === 0) return; // Ensure move happened
+
+    const deltaX = touchEndX - touchStartX;
+
+    if (Math.abs(deltaX) > swipeThreshold) { // Detect swipe
+        if (deltaX > 0) {
+            // Swipe Right (previous image)
+            showModalImage(currentModalIndex - 1);
+        } else {
+            // Swipe Left (next image)
+            showModalImage(currentModalIndex + 1);
+        }
+    }
+
+    // Reset touch coordinates
+    touchStartX = 0;
+    touchEndX = 0;
+}
+
+// --- End Modal Navigation Logic ---
 
 // Event Listeners
 // --- Event Listeners ---
@@ -595,24 +727,41 @@ $(document).ready(() => {
     const $imageModal = $('#imageModal');
     const $modalImage = $('#modalImage');
 
-    // Open image modal
-    $gallery.on('click', '.card-img-top', function(e) {
+    // Open image modal (with navigation)
+    // Use off().on() to prevent multiple bindings if code runs again or gallery reloads
+    $gallery.off('click', '.card-img-top').on('click', '.card-img-top', function(e) {
         e.stopPropagation(); // Prevent triggering overlay buttons
         const imageSrc = $(this).attr('src');
-        $modalImage.attr('src', imageSrc);
-        $imageModal.css('display', 'flex');
-        $('body').css('overflow', 'hidden'); // Prevent scrolling
+        openImageModal(imageSrc); // Use the new function to handle state and listeners
+        $('body').css('overflow', 'hidden'); // Prevent scrolling while modal is open
     });
 
-    // Close modal on background or image click
-    $imageModal.on('click', function(e) {
-        if (e.target === this || e.target === $modalImage[0]) {
-            closeImageModal();
+    // Modal Navigation Clicks (attach directly, not inside gallery listener)
+    $modalNavPrev.off('click').on('click', (e) => {
+        e.stopPropagation(); // Prevent modal close if clicking on nav area
+        showModalImage(currentModalIndex - 1);
+    });
+
+    $modalNavNext.off('click').on('click', (e) => {
+        e.stopPropagation(); // Prevent modal close if clicking on nav area
+        showModalImage(currentModalIndex + 1);
+    });
+
+    // Close modal (background click or X button)
+    $imageModal.off('click').on('click', function(e) {
+        // Close if the click target is NOT inside a nav area AND NOT the close button.
+        // This allows clicking the image or the background area between navs to close.
+        if (!$(e.target).closest('.modal-nav').length && !$(e.target).closest('.modal-close').length) {
+            closeImageModal(); // Handles removing listeners and clearing state
+            $('body').css('overflow', ''); // Restore scrolling
         }
     });
-
-    // Close modal on X button click
-    $('.modal-close').on('click', closeImageModal);
+    // Use off().on() for close button as well
+    $('.modal-close').off('click').on('click', function(e) {
+         e.stopPropagation(); // Prevent background click handler
+         closeImageModal(); // Handles removing listeners and clearing state
+         $('body').css('overflow', ''); // Restore scrolling
+    });
 
     function closeImageModal() {
         $imageModal.css('display', 'none');
