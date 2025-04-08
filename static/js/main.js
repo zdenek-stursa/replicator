@@ -5,6 +5,53 @@ let isGenerating = false;
 let modalImages = []; // Array to store image filenames for modal navigation
 let currentModalIndex = -1; // Index of the currently displayed image in the modal
 
+// --- Loading Messages ---
+const GENERATE_MESSAGES = [
+    "Obětovávám svou duši...",
+    "Chroustám pixely...",
+    "Vydrž...",
+    "Zhmotňuji krásu...",
+    "Jeden pixel, druhý, ...",
+    "Přerovnávám 0 a 1...",
+    "Hňácám...",
+    "Čaruji...",
+    "Chaóóós...",
+    "Leštím...",
+    "Žhavím grafiky...",
+    "Medituji...",
+    "Sublimuji sny...",
+    "Chroupám...",
+    "Drtím...",
+    "Vařím kafe...",
+    "Prozkoumávám vesmír...",
+    "Kvantifikuji vešehomír...",
+    "Skládám...",
+    "Pomaleji to nejde..."
+];
+
+const IMPROVE_MESSAGES = [
+    "Vstávat a psát...",
+    "Copywriteři teď!",
+    "Volím si tebe...",
+    "Nekecat a přepsat...",
+    "Jedu, jedůůů!",
+    "Fuj, práce...",
+    "To ses moc nevytáhl...",
+    "Prej autor...",
+    "Další hloupost...",
+    "Vááážně?",
+    "Fakt jo?",
+    "Sakra, proč?",
+    "Ne, tohle ne!",
+    "Tohle fakt nedám..."
+];
+
+// Helper function to get a random message
+function getRandomMessage(messagesArray) {
+    const randomIndex = Math.floor(Math.random() * messagesArray.length);
+    return messagesArray[randomIndex];
+}
+
 // DOM Elements
 const $form = $('#generationForm');
 const $prompt = $('#prompt');
@@ -351,7 +398,7 @@ async function generateImage(prompt, modelId, parameters) {
     try {
         // For generation, backend handles both translation and generation.
         // We'll show a general message.
-        toggleLoading(true, 'Generuji obrázek...');
+        toggleLoading(true, getRandomMessage(GENERATE_MESSAGES));
 
         const payload = {
             prompt: prompt,
@@ -390,7 +437,7 @@ async function generateImage(prompt, modelId, parameters) {
 // Improve prompt
 async function improvePrompt(prompt) {
     try {
-        toggleLoading(true, 'Vylepšuji prompt...'); // Add text for improving prompt
+        toggleLoading(true, getRandomMessage(IMPROVE_MESSAGES)); // Use random message
         
         const response = await fetch('/api/improve-prompt', {
             method: 'POST',
@@ -474,6 +521,7 @@ function openImageModal(clickedImageSrc) {
     }
 
     $imageModal.css('display', 'flex'); // Show the modal
+    $('body').css('overflow', 'hidden'); // Hide body scrollbars
 
     // Add keyboard listener when modal opens
     $(document).on('keydown.modalNav', handleModalKeydown);
@@ -486,6 +534,7 @@ function openImageModal(clickedImageSrc) {
 // Function to close the image modal
 function closeImageModal() {
     $imageModal.css('display', 'none');
+    $('body').css('overflow', ''); // Restore body scrollbars
     $modalImage.attr('src', ''); // Clear image source
     modalImages = []; // Clear the image list
     currentModalIndex = -1;

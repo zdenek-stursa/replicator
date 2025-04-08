@@ -44,19 +44,19 @@
             border-color: #404040;
         }
         
-        .btn-primary, #improvePrompt, .page-link {
+        #improvePrompt, .page-link {
             background-color: #373636;
             border-color: #403030;
             color: white;
         }
         
-        .btn-primary:hover, #improvePrompt:hover, .page-link:hover {
+        #improvePrompt:hover, .page-link:hover {
             background-color: #222222;
             border-color: #302424;
             color: white;
         }
 
-        .btn-primary:focus, #improvePrompt:focus, .page-link:focus, .btn-primary:active {
+        #improvePrompt:focus, .page-link:focus {
             background-color: #222222;
             border-color: #302424;
             color: white;
@@ -139,6 +139,14 @@
 
             #generateBtn {
                 width: 100%; /* Plná šířka na mobilu */
+            }
+
+            /* CSS rules for form-row-full-width-mobile removed */
+
+            /* Remove padding on form column on mobile */
+            #form-row > .col-12 {
+                padding-left: 0;
+                padding-right: 0;
             }
         }
         
@@ -240,6 +248,12 @@
             padding-top: 0.75rem; /* Zvětšení horního paddingu */
             padding-bottom: 0.75rem; /* Zvětšení dolního paddingu */
             font-size: 1.1rem; /* Mírné zvětšení písma pro lepší proporce */
+            background-color: #1a1a1a;
+            border-color: #403030;
+        }
+
+        #generateBtn:hover, #generateBtn:active {
+            background-color: #272727;
         }
     </style>
 </head>
@@ -278,7 +292,7 @@
         </header>
 
         <!-- Image Generation Form -->
-        <div class="row mb-4">
+        <div class="row mb-4" id="form-row"> <!-- Removed class, added ID -->
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
