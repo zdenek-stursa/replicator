@@ -52,6 +52,48 @@ function getRandomMessage(messagesArray) {
     return messagesArray[randomIndex];
 }
 
+// --- Aspect Ratio Helpers ---
+
+// Parses "X:Y" string to a numeric ratio (X/Y)
+function parseRatio(ratioString) {
+    if (!ratioString || typeof ratioString !== 'string' || !ratioString.includes(':')) {
+        return 1; // Default to 1:1 if invalid
+    }
+    const parts = ratioString.split(':');
+    const num = parseFloat(parts[0]);
+    const den = parseFloat(parts[1]);
+    return (den !== 0 && !isNaN(num) && !isNaN(den)) ? num / den : 1;
+}
+
+// Clamps value within min/max and rounds to the nearest multipleOf
+function clampAndRound(value, min, max, multipleOf) {
+    let clampedValue = value;
+    if (min !== undefined && clampedValue < min) clampedValue = min;
+    if (max !== undefined && clampedValue > max) clampedValue = max;
+    if (multipleOf !== undefined && multipleOf > 0) {
+        clampedValue = Math.round(clampedValue / multipleOf) * multipleOf;
+    }
+    return Math.round(clampedValue); // Return integer
+}
+
+// Helper to apply a value to a form input (handles different types)
+function applyParamValue(key, value) {
+    const $input = $(`#param-${key}`);
+    if ($input.length && value !== undefined && value !== null) {
+        if ($input.is(':checkbox')) {
+            $input.prop('checked', value === true || value === 'true');
+        } else if ($input.is('select')) {
+            $input.val(value);
+        } else if ($input.attr('type') === 'range') {
+            $input.val(value);
+            $input.siblings('.range-value').text(value); // Update range display
+        } else {
+            $input.val(value);
+        }
+    }
+}
+
+
 // DOM Elements
 const $form = $('#generationForm');
 const $prompt = $('#prompt');
@@ -215,6 +257,7 @@ function createLabel(paramName, schema) {
 function createFormField(paramName, schema) {
     const label = createLabel(paramName, schema);
     let inputHtml = '';
+    let wrapperClass = 'col-md-6 mb-3'; // Default wrapper class
     const commonAttrs = `id="param-${paramName}" name="${paramName}" class="form-control model-param"`;
 
     // Skip prompt, handled separately
@@ -283,7 +326,12 @@ function createFormField(paramName, schema) {
         return ''; // Skip unsupported types
     }
 
-    return `<div class="col-md-6 mb-3">${label}${inputHtml}</div>`;
+    // Add specific class for width/height wrappers to allow hiding/showing
+    if (paramName === 'width' || paramName === 'height') {
+        wrapperClass += ' dimension-input-wrapper';
+    }
+
+    return `<div class="${wrapperClass}">${label}${inputHtml}</div>`;
 }
 
 // Generate form fields from schema and append to container
@@ -293,6 +341,34 @@ function generateFormFields(schema) {
         console.error("Invalid schema received:", schema);
         $modelParamsContainer.html('<p class="text-danger">Nepodařilo se načíst parametry modelu.</p>');
         return;
+    }
+
+    // Check if both width and height are present for aspect ratio selector
+    const hasWidth = schema.properties.hasOwnProperty('width');
+    const hasHeight = schema.properties.hasOwnProperty('height');
+    const showAspectRatioSelector = hasWidth && hasHeight;
+
+    let aspectRatioHtml = '';
+    if (showAspectRatioSelector) {
+        aspectRatioHtml = `
+            <div class="col-12 mb-3">
+                <label for="aspectRatioSelect" class="form-label">Aspect ratio</label>
+                <select id="aspectRatioSelect" class="form-select">
+                    <option value="21:9">21:9 (Cinematic)</option>
+                    <option value="16:9">16:9 (Widescreen)</option>
+                    <option value="3:2">3:2</option>
+                    <option value="4:3">4:3</option>
+                    <option value="5:4">5:4</option>
+                    <option value="1:1" selected>1:1 (Square)</option>
+                    <option value="4:5">4:5 (Portrait)</option>
+                    <option value="3:4">3:4 (Portrait)</option>
+                    <option value="2:3">2:3 (Portrait)</option>
+                    <option value="9:16">9:16 (Tall/Story)</option>
+                    <option value="9:21">9:21 (Tall Cinematic)</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+        `;
     }
 
     let fieldsHtml = '';
@@ -307,7 +383,7 @@ function generateFormFields(schema) {
     for (const [paramName, paramSchema] of sortedProperties) {
         fieldsHtml += createFormField(paramName, paramSchema);
     }
-    $modelParamsContainer.html(fieldsHtml || '<p class="text-muted">Tento model nemá žádné další konfigurovatelné parametry.</p>');
+    $modelParamsContainer.html(aspectRatioHtml + fieldsHtml || '<p class="text-muted">Tento model nemá žádné další konfigurovatelné parametry.</p>');
 
     // Initialize tooltips for new elements
     const tooltipTriggerList = [].slice.call($modelParamsContainer[0].querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -321,6 +397,66 @@ function generateFormFields(schema) {
         const currentValue = $(this).val();
         $(this).siblings('.range-value').text(currentValue);
     });
+
+    // Hide dimension inputs initially if aspect ratio selector is shown
+    if (showAspectRatioSelector) {
+        $modelParamsContainer.find('.dimension-input-wrapper').hide();
+    }
+}
+
+// --- Aspect Ratio Change Handler ---
+function handleAspectRatioChange(schema) {
+    const selectedRatio = $('#aspectRatioSelect').val();
+    const $widthInput = $('#param-width');
+    const $heightInput = $('#param-height');
+    const $dimensionWrappers = $modelParamsContainer.find('.dimension-input-wrapper');
+
+    if (!$widthInput.length || !$heightInput.length || !schema || !schema.properties) {
+        console.error("Missing elements or schema for aspect ratio handling.");
+        return;
+    }
+
+    const widthSchema = schema.properties.width || {};
+    const heightSchema = schema.properties.height || {};
+
+    if (selectedRatio === 'custom') {
+        $dimensionWrappers.slideDown(); // Show width/height inputs
+    } else {
+        $dimensionWrappers.slideUp(); // Hide width/height inputs
+
+        const ratioValue = parseRatio(selectedRatio); // Get numeric ratio W/H
+
+        // Get max dimensions from schema, with fallbacks
+        const maxWidth = widthSchema.maximum || widthSchema.default || 1024;
+        const maxHeight = heightSchema.maximum || heightSchema.default || 1024;
+
+        let calculatedWidth, calculatedHeight;
+
+        // Calculate dimensions based on orientation
+        if (ratioValue >= 1) { // Landscape or Square
+            calculatedWidth = maxWidth;
+            calculatedHeight = maxWidth / ratioValue;
+        } else { // Portrait
+            calculatedHeight = maxHeight;
+            calculatedWidth = maxHeight * ratioValue;
+        }
+
+        // Clamp and round based on schema constraints for BOTH dimensions
+        calculatedWidth = clampAndRound(calculatedWidth, widthSchema.minimum, widthSchema.maximum, widthSchema.multipleOf);
+        calculatedHeight = clampAndRound(calculatedHeight, heightSchema.minimum, heightSchema.maximum, heightSchema.multipleOf);
+
+        // Update the hidden input values
+        $widthInput.val(calculatedWidth);
+        $heightInput.val(calculatedHeight);
+
+        // If sliders are used, update their display values too (even though hidden)
+        if ($widthInput.attr('type') === 'range') {
+            $widthInput.siblings('.range-value').text(calculatedWidth);
+        }
+        if ($heightInput.attr('type') === 'range') {
+            $heightInput.siblings('.range-value').text(calculatedHeight);
+        }
+    }
 }
 
 // Load model parameters from API
@@ -344,7 +480,14 @@ async function loadModelParams(modelId) {
         }
 
         // The response itself should be the schema's 'components.schemas.Input' part
-        generateFormFields(data?.components?.schemas?.Input);
+        const inputSchema = data?.components?.schemas?.Input;
+        generateFormFields(inputSchema);
+
+        // If aspect ratio selector was added, attach listener and trigger initial calculation
+        if ($('#aspectRatioSelect').length > 0 && inputSchema) {
+            $modelParamsContainer.off('change', '#aspectRatioSelect').on('change', '#aspectRatioSelect', () => handleAspectRatioChange(inputSchema));
+            handleAspectRatioChange(inputSchema); // Initial calculation for default ratio
+        }
 
     } catch (error) {
         console.error("Error loading model parameters:", error);
@@ -405,6 +548,11 @@ async function generateImage(prompt, modelId, parameters) {
             model_id: modelId,
             parameters: parameters
         };
+        // Add aspect_ratio: "custom" if width and height are being sent
+        if (payload.parameters.hasOwnProperty('width') && payload.parameters.hasOwnProperty('height')) {
+             payload.parameters.aspect_ratio = "custom";
+        }
+
         console.log("Sending generation request:", payload); // Debug log
 
         const response = await fetch('/api/generate-image', {
@@ -729,18 +877,52 @@ $(document).ready(() => {
                 console.log("TODO: Apply saved parameters:", data.parameters);
                 // Example (needs refinement and error handling):
                 if (data.parameters) {
-                    for (const [paramName, paramValue] of Object.entries(data.parameters)) {
-                        const $field = $modelParamsContainer.find(`[name="${paramName}"]`);
-                        if ($field.length) {
-                            if ($field.is(':checkbox')) {
-                                $field.prop('checked', paramValue);
-                            } else if ($field.is('input[type="range"]')) {
-                                $field.val(paramValue);
-                                $field.siblings('.range-value').text(paramValue); // Update range display
-                            } else {
-                                $field.val(paramValue);
+                    const parameters = data.parameters || {};
+                    for (const [key, value] of Object.entries(parameters)) {
+                         // Skip width/height for now, handle them via aspect ratio logic
+                         if (key === 'width' || key === 'height') continue;
+                         applyParamValue(key, value); // Use helper function
+                    }
+
+                    // --- Aspect Ratio Handling ---
+                    const $aspectSelect = $('#aspectRatioSelect');
+                    if ($aspectSelect.length > 0 && parameters.width && parameters.height) {
+                        const metaWidth = parseFloat(parameters.width);
+                        const metaHeight = parseFloat(parameters.height);
+                        if (!isNaN(metaWidth) && !isNaN(metaHeight) && metaHeight !== 0) {
+                            const actualRatio = metaWidth / metaHeight;
+                            let matched = false;
+                            $aspectSelect.find('option').each(function() {
+                                const optionVal = $(this).val();
+                                if (optionVal !== 'custom') {
+                                    const optionRatio = parseRatio(optionVal);
+                                    // Compare with tolerance for floating point issues
+                                    if (Math.abs(actualRatio - optionRatio) < 0.01) {
+                                        $aspectSelect.val(optionVal);
+                                        matched = true;
+                                        return false; // Break loop
+                                    }
+                                }
+                            });
+                            if (!matched) {
+                                $aspectSelect.val('custom');
                             }
+                        } else {
+                            $aspectSelect.val('custom'); // Fallback if width/height invalid
                         }
+                        // Trigger change handler to update UI (show/hide sliders etc.)
+                        // and apply the loaded width/height values correctly
+                        $aspectSelect.trigger('change');
+
+                        // Ensure the actual width/height from metadata are set AFTER triggering change
+                        // This handles the 'custom' case correctly and overrides potential recalculations
+                        applyParamValue('width', metaWidth);
+                        applyParamValue('height', metaHeight);
+
+                    } else {
+                         // If no aspect ratio selector, apply width/height directly if they exist
+                         applyParamValue('width', parameters.width);
+                         applyParamValue('height', parameters.height);
                     }
                 }
                 // ------------------------------------
