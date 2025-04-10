@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs" data-bs-theme="dark">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,7 +85,7 @@
         .image-card {
             position: relative;
             overflow: hidden;
-            padding-bottom: 100%; /* Vytvoří čtvercový kontejner */
+            padding-bottom: 100%; /* Creates a square container */
             background-color: #1a1a1a;
         }
 
@@ -109,8 +109,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Zachová poměr stran */
-            z-index: 1; /* Zajistí, že obrázek bude nad rozmazaným pozadím */
+            object-fit: contain; /* Preserves aspect ratio */
+            z-index: 1; /* Ensures the image is above the blurred background */
         }
         
         .image-card .overlay {
@@ -138,7 +138,7 @@
             /* No need for hover rule on mobile as it's always visible */
 
             #generateBtn {
-                width: 100%; /* Plná šířka na mobilu */
+                width: 100%; /* Full width on mobile */
             }
 
             /* CSS rules for form-row-full-width-mobile removed */
@@ -245,9 +245,9 @@
         }
 
         #generateBtn {
-            padding-top: 0.75rem; /* Zvětšení horního paddingu */
-            padding-bottom: 0.75rem; /* Zvětšení dolního paddingu */
-            font-size: 1.1rem; /* Mírné zvětšení písma pro lepší proporce */
+            padding-top: 0.75rem; /* Increase top padding */
+            padding-bottom: 0.75rem; /* Increase bottom padding */
+            font-size: 1.1rem; /* Slightly increase font size for better proportions */
             background-color: #1a1a1a;
             border-color: #403030;
         }
@@ -264,10 +264,10 @@
             <i class="fas fa-times"></i>
         </div>
         <!-- Navigation Arrows/Areas -->
-        <div class="modal-nav modal-nav-prev" title="Předchozí obrázek">
+        <div class="modal-nav modal-nav-prev" title="Previous image">
             <i class="fas fa-chevron-left"></i>
         </div>
-        <div class="modal-nav modal-nav-next" title="Další obrázek">
+        <div class="modal-nav modal-nav-next" title="Next image">
             <i class="fas fa-chevron-right"></i>
         </div>
         <img id="modalImage" src="" alt="Full size image">
@@ -277,7 +277,7 @@
     <div class="spinner-overlay" id="spinnerOverlay">
         <div class="d-flex flex-column align-items-center"> <!-- Flex container for spinner and text -->
             <div class="spinner-border text-light mb-2" role="status"> <!-- Added margin-bottom -->
-                <span class="visually-hidden">Načítání...</span>
+                <span class="visually-hidden">Loading...</span>
             </div>
             <span id="spinner-text" class="text-light"></span> <!-- Element for dynamic text -->
         </div>
@@ -288,7 +288,7 @@
         <!-- Header -->
         <header class="pb-3 mb-4 border-bottom">
             <h1 class="display-5 fw-bold">Replicator</h1>
-            <p class="lead">Generátor obrázků pomocí AI modelů</p>
+            <p class="lead">Image generator using the Replicate API</p>
         </header>
 
         <!-- Image Generation Form -->
@@ -298,14 +298,14 @@
                     <div class="card-body">
                         <form id="generationForm">
                             <div class="mb-3">
-                                <label for="prompt" class="form-label">Prompt</label>
-                                <!-- Responzivní kontejner: sloupec na mobilu, řádek od 'md' výše -->
+                                <label for="prompt" class="form-label">Image prompt</label>
+                                <!-- Responsive container: column on mobile, row from 'md' up -->
                                 <div class="d-flex flex-column flex-md-row">
-                                    <!-- Textarea: roste na desktopu, plná šířka a mezera dole na mobilu -->
+                                    <!-- Textarea: grows on desktop, full width and bottom margin on mobile -->
                                     <textarea class="form-control flex-grow-1 mb-2 mb-md-0" id="prompt" rows="6" style="resize: vertical;" required></textarea>
-                                    <!-- Tlačítko: auto šířka a mezera vlevo na desktopu, plná šířka na mobilu -->
+                                    <!-- Button: auto width and left margin on desktop, full width on mobile -->
                                     <button class="btn btn-outline-secondary w-md-auto ms-md-2" type="button" id="improvePrompt">
-                                        <i class="fa fa-magic"></i> Vylepšit
+                                        <i class="fa fa-magic"></i> Improve
                                     </button>
                                 </div>
                             </div>
@@ -313,7 +313,7 @@
                                 <div class="col-12 mb-3"> <!-- Make model select full width -->
                                     <label for="modelSelect" class="form-label">Model</label>
                                     <select class="form-select" id="modelSelect" required>
-                                        <option value="" disabled selected>Načítání modelů...</option>
+                                        <option value="" disabled selected>Loading models...</option>
                                         <!-- Models will be loaded here by JS -->
                                     </select>
                                 </div>
@@ -325,7 +325,7 @@
                             </div>
                             <div class="text-end">
                                 <button type="submit" class="btn btn-primary" id="generateBtn">
-                                    <i class="fas fa-image me-2"></i>Generovat
+                                    <i class="fas fa-image me-2"></i>Generate
                                 </button>
                             </div>
                         </form>
@@ -352,15 +352,15 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Potvrzení smazání</h5>
+                    <h5 class="modal-title">Confirm Deletion</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Opravdu chcete smazat tento obrázek?</p>
+                    <p>Do you really want to delete this image?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
-                    <button type="button" class="btn btn-danger" id="confirmDelete">Smazat</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
                 </div>
             </div>
         </div>
@@ -371,14 +371,14 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Chyba</h5>
+                    <h5 class="modal-title">Error</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <p id="errorMessage"></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zavřít</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

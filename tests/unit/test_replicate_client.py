@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from api.replicate_client import ReplicateClient
-import replicate # Importujeme replicate pro mockování
-from replicate.exceptions import ReplicateError # Importujeme specifickou výjimku
+import replicate # Import replicate for mocking
+from replicate.exceptions import ReplicateError # Import specific exception
 
-# Předpokládaná struktura odpovědi z Replicate API pro model details
-# Zjednodušená struktura pro testování, zaměřená na schema
+# Expected structure of the response from Replicate API for model details
+# Simplified structure for testing, focused on the schema
 MOCK_API_RESPONSE = MagicMock()
 MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value = {
     "openapi_schema": {
@@ -24,7 +24,7 @@ MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value = {
             }
         }
     },
-    # Přidáme další pole, která by mohla být v transformovaném schématu
+    # Add other fields that might be in the transformed schema
     "title": "SDXL",
     "description": "A text-to-image model by Stability AI"
 }
@@ -32,144 +32,144 @@ MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value = {
 
 @pytest.fixture
 def replicate_client_instance():
-    """Fixture pro vytvoření instance ReplicateClient s dummy tokenem."""
-    # Mockujeme os.getenv jen pro případ, že by ho __init__ volal (i když aktuálně nevolá)
+    """Fixture to create a ReplicateClient instance with a dummy token."""
+    # Mock os.getenv just in case __init__ calls it (although it currently doesn't)
     with patch('os.getenv', return_value='dummy_api_key'):
-        # Předáme dummy token, protože __init__ ho vyžaduje
+        # Pass a dummy token because __init__ requires it
         client = ReplicateClient(api_token="dummy_test_token")
         yield client
 
-# Nepotřebujeme patchovat replicate.Client v __init__, protože se tam nevolá
+# No need to patch replicate.Client in __init__ because it's not called there
 
-@patch('api.replicate_client.replicate.models') # Mockujeme modul models v kontextu replicate_client.py
+@patch('api.replicate_client.replicate.models') # Mock the models module in the context of replicate_client.py
 def test_get_model_details_success(mock_replicate_models, replicate_client_instance):
     """
-    Testuje úspěšné získání detailů modelu.
-    Očekává se, že metoda zavolá replicate.models.get a vrátí zpracované schéma.
+    Tests successful retrieval of model details.
+    Expected that the method calls replicate.models.get and returns the processed schema.
     """
     model_owner = "stability-ai"
     model_name = "sdxl"
     model_id = f"{model_owner}/{model_name}"
 
-    # Reset mocku pro tento test (kvůli side_effect v jiném testu)
+    # Reset mock for this test (due to side_effect in another test)
     mock_replicate_models.get.side_effect = None
-    # Nastavení návratové hodnoty pro mockované volání replicate.models.get
+    # Set the return value for the mocked call to replicate.models.get
     mock_model_success = MagicMock()
     mock_model_success.latest_version.get_transformed_schema.return_value = MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value
     mock_replicate_models.get.return_value = mock_model_success
-    # Reset volání pro get_transformed_schema, pokud bylo voláno v předchozím testu
+    # Reset call for get_transformed_schema if it was called in a previous test
     mock_model_success.latest_version.get_transformed_schema.reset_mock()
 
 
-    # Volání testované metody
+    # Call the method under test
     details_schema = replicate_client_instance.get_model_details(model_id)
 
-    # Ověření, že mockovaná metoda replicate.models.get byla volána se správným argumentem
+    # Verify that the mocked method replicate.models.get was called with the correct argument
     mock_replicate_models.get.assert_called_once_with(model_id)
 
-    # Ověření, že metoda get_transformed_schema byla volána na vráceném objektu
+    # Verify that the get_transformed_schema method was called on the returned object
     mock_model_success.latest_version.get_transformed_schema.assert_called_once()
 
-    # Ověření vráceného schématu (mělo by to být to, co vrátila get_transformed_schema)
+    # Verify the returned schema (it should be what get_transformed_schema returned)
     assert details_schema is not None
     assert details_schema == MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value
-    assert "openapi_schema" in details_schema # Jen základní kontrola struktury
+    assert "openapi_schema" in details_schema # Just a basic structure check
 
-@patch('api.replicate_client.replicate.models') # Mockujeme modul models v kontextu replicate_client.py
+@patch('api.replicate_client.replicate.models') # Mock the models module in the context of replicate_client.py
 def test_get_model_details_api_error(mock_replicate_models, replicate_client_instance):
     """
-    Testuje případ, kdy Replicate API vrátí chybu při volání models.get.
-    Očekává se, že metoda zachytí ReplicateError a vrátí None.
+    Tests the case where the Replicate API returns an error when calling models.get.
+    Expected that the method catches ReplicateError and returns None.
     """
     model_id = "owner/non-existent-model"
 
-    # Nastavení mocku tak, aby vyvolal ReplicateError při volání .get()
+    # Set the mock to raise ReplicateError when .get() is called
     mock_replicate_models.get.side_effect = ReplicateError("Simulated API Error")
 
-    # Volání testované metody
+    # Call the method under test
     details_schema = replicate_client_instance.get_model_details(model_id)
 
-    # Ověření, že mockovaná metoda replicate.models.get byla volána
+    # Verify that the mocked method replicate.models.get was called
     mock_replicate_models.get.assert_called_once_with(model_id)
 
-    # Ověření, že metoda vrátila None
+    # Verify that the method returned None
     assert details_schema is None
 
-@patch('api.replicate_client.replicate.models') # Mockujeme modul models v kontextu replicate_client.py
+@patch('api.replicate_client.replicate.models') # Mock the models module in the context of replicate_client.py
 def test_get_model_details_no_version(mock_replicate_models, replicate_client_instance):
     """
-    Testuje případ, kdy nalezený model nemá 'latest_version'.
-    Očekává se, že metoda vrátí None.
+    Tests the case where the found model does not have 'latest_version'.
+    Expected that the method returns None.
     """
     model_id = "owner/model-without-version"
 
-    # Vytvoříme mock model objekt, který nemá latest_version (nebo je None)
+    # Create a mock model object that does not have latest_version (or it is None)
     mock_model_no_version = MagicMock()
-    mock_model_no_version.latest_version = None # Explicitně nastavíme na None
+    mock_model_no_version.latest_version = None # Explicitly set to None
 
-    # Nastavení návratové hodnoty pro mockované volání replicate.models.get
+    # Set the return value for the mocked call to replicate.models.get
     mock_replicate_models.get.return_value = mock_model_no_version
-    mock_replicate_models.get.side_effect = None # Zrušíme side_effect z předchozího testu
+    mock_replicate_models.get.side_effect = None # Cancel the side_effect from the previous test
 
-    # Volání testované metody
+    # Call the method under test
     details_schema = replicate_client_instance.get_model_details(model_id)
 
-    # Ověření, že mockovaná metoda replicate.models.get byla volána
+    # Verify that the mocked method replicate.models.get was called
     mock_replicate_models.get.assert_called_once_with(model_id)
 
-    # Ověření, že metoda vrátila None
+    # Verify that the method returned None
     assert details_schema is None
 
-@patch('api.replicate_client.replicate.models') # Mockujeme modul models v kontextu replicate_client.py
+@patch('api.replicate_client.replicate.models') # Mock the models module in the context of replicate_client.py
 def test_get_model_details_no_schema(mock_replicate_models, replicate_client_instance):
     """
-    Testuje případ, kdy model má verzi, ale get_transformed_schema vrátí None.
-    Očekává se, že metoda vrátí None.
+    Tests the case where the model has a version, but get_transformed_schema returns None.
+    Expected that the method returns None.
     """
     model_id = "owner/model-without-schema"
 
-    # Vytvoříme mock model objekt s verzí, ale get_transformed_schema vrátí None
+    # Create a mock model object with a version, but get_transformed_schema returns None
     mock_model_no_schema = MagicMock()
     mock_model_no_schema.latest_version.get_transformed_schema.return_value = None
 
-    # Nastavení návratové hodnoty pro mockované volání replicate.models.get
+    # Set the return value for the mocked call to replicate.models.get
     mock_replicate_models.get.return_value = mock_model_no_schema
-    mock_replicate_models.get.side_effect = None # Zrušíme side_effect
+    mock_replicate_models.get.side_effect = None # Cancel the side_effect
 
-    # Volání testované metody
+    # Call the method under test
     details_schema = replicate_client_instance.get_model_details(model_id)
 
-    # Ověření, že mockovaná metoda replicate.models.get byla volána
+    # Verify that the mocked method replicate.models.get was called
     mock_replicate_models.get.assert_called_once_with(model_id)
 
-    # Ověření, že metoda get_transformed_schema byla volána
+    # Verify that the get_transformed_schema method was called
     mock_model_no_schema.latest_version.get_transformed_schema.assert_called_once()
 
-    # Ověření, že metoda vrátila None
+    # Verify that the method returned None
     assert details_schema is None
 
-@patch('api.replicate_client.replicate.models') # Mockujeme modul models v kontextu replicate_client.py
+@patch('api.replicate_client.replicate.models') # Mock the models module in the context of replicate_client.py
 def test_get_model_details_unexpected_error(mock_replicate_models, replicate_client_instance):
     """
-    Testuje případ, kdy nastane neočekávaná chyba (Exception) během volání API.
-    Očekává se, že metoda zachytí Exception a vrátí None.
+    Tests the case where an unexpected error (Exception) occurs during the API call.
+    Expected that the method catches Exception and returns None.
     """
     model_id = "owner/model-causing-exception"
 
-    # Nastavení mocku tak, aby vyvolal obecnou Exception při volání .get()
+    # Set the mock to raise a general Exception when .get() is called
     mock_replicate_models.get.side_effect = Exception("Simulated Unexpected Error")
 
-    # Volání testované metody
+    # Call the method under test
     details_schema = replicate_client_instance.get_model_details(model_id)
 
-    # Ověření, že mockovaná metoda replicate.models.get byla volána
+    # Verify that the mocked method replicate.models.get was called
     mock_replicate_models.get.assert_called_once_with(model_id)
 
-    # Ověření, že metoda vrátila None
+    # Verify that the method returned None
     assert details_schema is None
 
 
-# Test pro generate_image (přidáme později)
+# Test for generate_image (to be added later)
 # @patch('api.replicate_client.replicate.run')
 # @patch('api.replicate_client.requests.get')
 # @patch('api.replicate_client.tempfile.NamedTemporaryFile')

@@ -1,27 +1,27 @@
 # Model Handling Specification
 
 ## Overview
-Specifikace definuje způsob načítání a správy Replicate modelů v aplikaci.
+This specification defines how Replicate models are loaded and managed within the application.
 
 ## Components
 
 ### ModelManager
-Třída zodpovědná za:
-- Načítání modelů z REPLICATE_MODELS
-- Validaci modelů
-- Poskytování informací o modelech ostatním komponentám
+Class responsible for:
+- Loading models from REPLICATE_MODELS
+- Validating models
+- Providing model information to other components
 
 ### ReplicateClient
-Rozšířená verze klienta pro:
-- Získávání parametrů modelů
-- Cachování parametrů pro optimalizaci
-- Validaci vstupů podle schématu modelu
+Extended client version for:
+- Retrieving model parameters
+- Caching parameters for optimization
+- Validating inputs against the model schema
 
-### FormGenerator 
-Komponenta pro:
-- Dynamické generování HTML formulářů
-- Validaci vstupů na frontendu
-- Zobrazování nápovědy a omezení parametrů
+### FormGenerator
+Component for:
+- Dynamically generating HTML forms
+- Validating inputs on the frontend
+- Displaying help text and parameter constraints
 
 ## Data Flow
 
@@ -73,25 +73,25 @@ handle_model_execution(model_id, user_inputs):
 
 1. Model Loading Errors:
 - Invalid model format in REPLICATE_MODELS
-- Nedostupné API
-- Neplatná odpověď z API
+- Unavailable API
+- Invalid API response
 
 2. Runtime Errors:
-- Neplatné vstupy od uživatele
-- Selhání modelu
-- Chyby při ukládání
+- Invalid user inputs
+- Model failure
+- Storage errors
 
 ## Validation
 
 1. Model Validation:
-- Formát: "owner/model:version"
-- Existence modelu v Replicate
-- Dostupnost verze
+- Format: "owner/model:version"
+- Model existence in Replicate
+- Version availability
 
 2. Parameter Validation:
-- Typy parametrů
-- Rozsahy hodnot
-- Povinné vs. volitelné parametry
+- Parameter types
+- Value ranges
+- Required vs. optional parameters
 
 ## Storage
 
@@ -120,11 +120,11 @@ handle_model_execution(model_id, user_inputs):
 ## Integration Points
 
 1. Frontend:
-- Dynamické formuláře (/templates/index.html)
-- JavaScript validace (static/js/main.js)
-- API endpointy pro metadata modelů
+- Dynamic forms (/templates/index.html)
+- JavaScript validation (static/js/main.js)
+- API endpoints for model metadata
 
 2. Backend:
-- ModelManager napojený na app.py
-- ReplicateClient rozšíření v api/replicate_client.py
-- Integrace s existující funkcionalitou ukládání a vylepšování promptů
+- ModelManager connected to app.py
+- ReplicateClient extension in api/replicate_client.py
+- Integration with existing functionality for saving and enhancing prompts

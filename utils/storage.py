@@ -54,7 +54,7 @@ class ImageManager(FileManager):
             os.unlink(source_path)
 
             logger.info(f"Saved image: {filename}")
-            return dest_path # Vracíme celou cestu
+            return dest_path # Return the full path
 
         except Exception as e:
             logger.error(f"Error saving image from file: {str(e)}", exc_info=True)

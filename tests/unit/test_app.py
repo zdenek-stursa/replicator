@@ -3,12 +3,12 @@ import json
 from unittest.mock import patch, MagicMock
 import os
 
-# Předpokládaný formát REPLICATE_MODELS v .env
+# Expected REPLICATE_MODELS format in .env
 MOCK_REPLICATE_MODELS_ENV = "stability-ai/sdxl:1.0,another/model:2.1,owner/name-only"
-# Očekávaný výstup pro /api/models (seznam ID)
+# Expected output for /api/models (list of IDs)
 EXPECTED_RAW_MODELS_LIST = MOCK_REPLICATE_MODELS_ENV.split(',')
 
-# Mock schéma pro detail modelu
+# Mock schema for model detail
 MOCK_MODEL_SCHEMA = {
     "openapi_schema": {
         "components": { "schemas": { "Input": { "type": "object", "properties": { "prompt": {"type": "string"} } } } }
@@ -16,31 +16,31 @@ MOCK_MODEL_SCHEMA = {
     "description": "Mock model description"
 }
 
-# Fixture pro Flask test klienta s patchováním metod instancí
+# Fixture for Flask test client with patching instance methods
 @pytest.fixture
 def client():
     env_vars = {
         "REPLICATE_API_TOKEN": "dummy_replicate_token",
         "OPENAI_API_KEY": "dummy_openai_key",
     }
-    # Patchujeme env proměnné PŘED importem app
+    # Patch env variables BEFORE importing app
     with patch.dict(os.environ, env_vars, clear=True):
-        # Importujeme app a jeho komponenty ZDE
+        # Import app and its components HERE
         from app import app as flask_app, model_cache, replicate_client, openai_client, image_manager, metadata_manager
 
-        # Přepíšeme config po inicializaci app
+        # Override config after app initialization
         flask_app.config['REPLICATE_MODELS'] = EXPECTED_RAW_MODELS_LIST
         flask_app.config['REPLICATE_API_TOKEN'] = "dummy_replicate_token"
         flask_app.config['OPENAI_API_KEY'] = "dummy_openai_key"
         flask_app.config['IMAGE_STORAGE_PATH'] = '/tmp/test_images'
         flask_app.config['METADATA_STORAGE_PATH'] = '/tmp/test_metadata'
 
-        # Vyčistíme cache před každým testem
+        # Clear cache before each test
         model_cache.clear()
 
         flask_app.config.update({"TESTING": True})
 
-        # Patchujeme METODY na importovaných INSTANCÍCH
+        # Patch METHODS on imported INSTANCES
         with patch.object(replicate_client, 'get_model_details', autospec=True) as mock_get_details, \
              patch.object(replicate_client, 'generate_image', autospec=True) as mock_generate_image, \
              patch.object(openai_client, 'translate_to_english', autospec=True) as mock_translate, \
@@ -52,9 +52,9 @@ def client():
              patch.object(image_manager, 'delete_image', autospec=True) as mock_delete_image, \
              patch.object(metadata_manager, 'delete_metadata', autospec=True) as mock_delete_meta:
 
-            # Vytvoříme test klienta
+            # Create test client
             with flask_app.test_client() as test_client:
-                # Yield klienta a slovník s mockovanými METODAMI
+                # Yield client and dictionary with mocked METHODS
                 yield test_client, {
                     "get_model_details": mock_get_details,
                     "generate_image": mock_generate_image,
@@ -68,20 +68,20 @@ def client():
                     "delete_metadata": mock_delete_meta,
                 }
 
-# --- Testy pro endpoint /api/models ---
+# --- Tests for /api/models endpoint ---
 
 def test_get_models_success(client):
-    """Testuje úspěšné získání seznamu modelů."""
+    """Tests successful retrieval of the model list."""
     test_client, _ = client
     response = test_client.get('/api/models')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert sorted(data['models']) == sorted(EXPECTED_RAW_MODELS_LIST)
 
-# --- Testy pro endpoint /api/models/{model_id} ---
+# --- Tests for /api/models/{model_id} endpoint ---
 
 def test_get_model_details_endpoint_success(client):
-    """Testuje úspěšné získání detailů modelu."""
+    """Tests successful retrieval of model details."""
     test_client, mocks = client
     model_id_to_test = EXPECTED_RAW_MODELS_LIST[0]
     mocks["get_model_details"].return_value = MOCK_MODEL_SCHEMA
@@ -92,30 +92,30 @@ def test_get_model_details_endpoint_success(client):
     mocks["get_model_details"].assert_called_once_with(model_id_to_test)
 
 def test_get_model_details_endpoint_not_found_in_config(client):
-    """Testuje případ, kdy model_id není v REPLICATE_MODELS."""
+    """Tests the case where model_id is not in REPLICATE_MODELS."""
     test_client, mocks = client
     invalid_model_id = "non/existent-model"
     response = test_client.get(f'/api/models/{invalid_model_id}')
     assert response.status_code == 404
     data = json.loads(response.data)
     assert 'error' in data
-    assert 'not found or not configured' in data['message'] # Kontrolujeme message
+    assert 'not found or not configured' in data['message'] # Check message
     mocks["get_model_details"].assert_not_called()
 
 def test_get_model_details_endpoint_api_failure(client):
-    """Testuje případ, kdy replicate_client.get_model_details vrátí None."""
+    """Tests the case where replicate_client.get_model_details returns None."""
     test_client, mocks = client
     model_id_to_test = EXPECTED_RAW_MODELS_LIST[1]
     mocks["get_model_details"].return_value = None
     response = test_client.get(f'/api/models/{model_id_to_test}')
-    assert response.status_code == 502 # Očekáváme 502 dle app.py
+    assert response.status_code == 502 # Expect 502 according to app.py
     data = json.loads(response.data)
     assert 'error' in data
-    assert 'Failed to fetch model details' in data['message'] # Kontrolujeme message
+    assert 'Failed to fetch model details' in data['message'] # Check message
     mocks["get_model_details"].assert_called_once_with(model_id_to_test)
 
 def test_get_model_details_endpoint_caching(client):
-     """Testuje, zda se výsledek cachuje."""
+     """Tests if the result is cached."""
      test_client, mocks = client
      model_id_to_test = EXPECTED_RAW_MODELS_LIST[2]
      mocks["get_model_details"].return_value = MOCK_MODEL_SCHEMA
@@ -131,16 +131,16 @@ def test_get_model_details_endpoint_caching(client):
      assert data2 == MOCK_MODEL_SCHEMA
      assert mocks["get_model_details"].call_count == call_count_before
 
-# --- Testy pro endpoint /api/generate-image ---
+# --- Tests for /api/generate-image endpoint ---
 
 def test_generate_image_endpoint_success(client):
-    """Testuje úspěšné generování obrázku s dynamickými parametry."""
+    """Tests successful image generation with dynamic parameters."""
     test_client, mocks = client
     model_id_to_test = EXPECTED_RAW_MODELS_LIST[0]
-    original_prompt = "Kočka na střeše"
+    original_prompt = "Cat on the roof"
     translated_prompt = "Cat on the roof"
     input_parameters = {"negative_prompt": "dog", "width": 1024, "height": 768}
-    # Použijeme cestu vrácenou z ImageManager (která je mockovaná)
+    # Use the path returned from ImageManager (which is mocked)
     mock_image_full_path = "/tmp/test_images/mock_image.webp"
     mock_image_filename = "mock_image.webp"
     mock_metadata_filename = "mock_image.json"
@@ -149,7 +149,7 @@ def test_generate_image_endpoint_success(client):
     mocks["generate_image"].return_value = {
         'status': 'success', 'image_path': "/tmp/some_temp_replicate_file.webp", 'metadata': {}
     }
-    # Mock save_image_from_file vrací celou cestu
+    # Mock save_image_from_file returns the full path
     mocks["save_image_from_file"].return_value = mock_image_full_path
     mocks["save_metadata"].return_value = mock_metadata_filename
 
@@ -168,24 +168,24 @@ def test_generate_image_endpoint_success(client):
     mocks["generate_image"].assert_called_once_with(
         prompt=translated_prompt, model_id=model_id_to_test, input_params=input_parameters
     )
-    # Ověříme, že save_image dostal cestu z generate_image
+    # Verify that save_image received the path from generate_image
     mocks["save_image_from_file"].assert_called_once_with("/tmp/some_temp_replicate_file.webp")
-    # Ověříme, že save_metadata dostal správný filename a metadata
+    # Verify that save_metadata received the correct filename and metadata
     mocks["save_metadata"].assert_called_once()
     saved_meta_call_args = mocks["save_metadata"].call_args[0]
-    assert saved_meta_call_args[0] == mock_image_filename # První argument je image_filename
-    saved_metadata = saved_meta_call_args[1] # Druhý argument jsou metadata
+    assert saved_meta_call_args[0] == mock_image_filename # First argument is image_filename
+    saved_metadata = saved_meta_call_args[1] # Second argument is metadata
     assert saved_metadata['original_prompt'] == original_prompt
     assert saved_metadata['translated_prompt'] == translated_prompt
     assert saved_metadata['model_id'] == model_id_to_test
     assert saved_metadata['parameters'] == input_parameters
 
 def test_generate_image_endpoint_missing_prompt(client):
-    """Testuje chybu 400, pokud chybí 'prompt'."""
+    """Tests for 400 error if 'prompt' is missing."""
     test_client, mocks = client
     model_id_to_test = EXPECTED_RAW_MODELS_LIST[0]
     request_data = {
-        # "prompt": "chybí",
+        # "prompt": "missing",
         "model_id": model_id_to_test,
         "parameters": {}
     }
@@ -193,34 +193,34 @@ def test_generate_image_endpoint_missing_prompt(client):
     assert response.status_code == 400
     data = json.loads(response.data)
     assert 'error' in data
-    assert data['error'] == 'Bad request' # Kontrolujeme obecný error
-    assert 'Prompt is required' in data['message'] # Kontrolujeme message
+    assert data['error'] == 'Bad request' # Check general error
+    assert 'Prompt is required' in data['message'] # Check message
     mocks["translate_to_english"].assert_not_called()
     mocks["generate_image"].assert_not_called()
 
 def test_generate_image_endpoint_missing_model_id(client):
-    """Testuje chybu 400, pokud chybí 'model_id'."""
+    """Tests for 400 error if 'model_id' is missing."""
     test_client, mocks = client
     request_data = {
-        "prompt": "Nějaký prompt",
-        # "model_id": "chybí",
+        "prompt": "Some prompt",
+        # "model_id": "missing",
         "parameters": {}
     }
     response = test_client.post('/api/generate-image', json=request_data)
     assert response.status_code == 400
     data = json.loads(response.data)
     assert 'error' in data
-    assert data['error'] == 'Bad request' # Kontrolujeme obecný error
-    assert 'Model ID is required' in data['message'] # Kontrolujeme message
+    assert data['error'] == 'Bad request' # Check general error
+    assert 'Model ID is required' in data['message'] # Check message
     mocks["translate_to_english"].assert_not_called()
     mocks["generate_image"].assert_not_called()
 
 def test_generate_image_endpoint_invalid_model_id(client):
-    """Testuje chybu 400, pokud 'model_id' není v konfiguraci."""
+    """Tests for 400 error if 'model_id' is not in configuration."""
     test_client, mocks = client
-    invalid_model_id = "neplatny/model"
+    invalid_model_id = "invalid/model"
     request_data = {
-        "prompt": "Nějaký prompt",
+        "prompt": "Some prompt",
         "model_id": invalid_model_id,
         "parameters": {}
     }
@@ -228,10 +228,10 @@ def test_generate_image_endpoint_invalid_model_id(client):
     assert response.status_code == 400
     data = json.loads(response.data)
     assert 'error' in data
-    assert data['error'] == 'Bad request' # Kontrolujeme obecný error
-    assert 'not found or not configured' in data['message'] # Kontrolujeme message
+    assert data['error'] == 'Bad request' # Check general error
+    assert 'not found or not configured' in data['message'] # Check message
     mocks["translate_to_english"].assert_not_called()
     mocks["generate_image"].assert_not_called()
 
 
-# --- Testy pro parsování REPLICATE_MODELS (pokryto testem /api/models) ---
+# --- Tests for parsing REPLICATE_MODELS (covered by /api/models test) ---

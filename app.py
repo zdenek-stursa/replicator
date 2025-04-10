@@ -127,7 +127,7 @@ def ratelimit_error(error):
         'type': 'RateLimitError'
     }), 429
 
-# Změna: Error handler pro 502
+# Change: Error handler for 502
 @app.errorhandler(502)
 def bad_gateway_error(error):
     """Bad gateway error handler"""
@@ -152,7 +152,7 @@ def internal_error(error):
 def handle_error(error):
     """Global error handler for unhandled exceptions"""
     if isinstance(error, HTTPException):
-        return error # Necháme projít specifické HTTP výjimky
+        return error # Let specific HTTP exceptions pass through
 
     logger.error(f"Unhandled error occurred: {str(error)}", exc_info=True)
     return jsonify({
@@ -200,10 +200,10 @@ def get_model_details_route(model_id):
             logger.error(f"Could not fetch details for model: {model_id}")
             abort(502, description='Failed to fetch model details from Replicate')
 
-    # Změna: Chytáme pouze obecnou Exception, HTTPException projde
+    # Change: Catch only general Exception, HTTPException passes through
     except Exception as e:
         if isinstance(e, HTTPException):
-            raise e # Necháme projít 502 z bloku výše
+            raise e # Let 502 from the block above pass through
         logger.error(f"Unexpected error fetching model details for {model_id}: {str(e)}", exc_info=True)
         abort(500, description=f'Unexpected error fetching details for model {model_id}')
 

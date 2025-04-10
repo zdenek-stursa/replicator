@@ -7,43 +7,43 @@ let currentModalIndex = -1; // Index of the currently displayed image in the mod
 
 // --- Loading Messages ---
 const GENERATE_MESSAGES = [
-    "Obětovávám svou duši...",
-    "Chroustám pixely...",
-    "Vydrž...",
-    "Zhmotňuji krásu...",
-    "Jeden pixel, druhý, ...",
-    "Přerovnávám 0 a 1...",
-    "Hňácám...",
-    "Čaruji...",
-    "Chaóóós...",
-    "Leštím...",
-    "Žhavím grafiky...",
-    "Medituji...",
-    "Sublimuji sny...",
-    "Chroupám...",
-    "Drtím...",
-    "Vařím kafe...",
-    "Prozkoumávám vesmír...",
-    "Kvantifikuji vešehomír...",
-    "Skládám...",
-    "Pomaleji to nejde..."
+    "Sacrificing my soul...",
+    "Crunching pixels...",
+    "Hold on...",
+    "Materializing beauty...",
+    "One pixel, two pixels, ...",
+    "Rearranging 0s and 1s...",
+    "Kneading...",
+    "Casting spells...",
+    "Chaooos...",
+    "Polishing...",
+    "Heating up the GPUs...",
+    "Meditating...",
+    "Sublimating dreams...",
+    "Munching...",
+    "Crushing...",
+    "Making coffee...",
+    "Exploring the universe...",
+    "Quantifying the cosmos...",
+    "Assembling...",
+    "Can't go any slower..."
 ];
 
 const IMPROVE_MESSAGES = [
-    "Vstávat a psát...",
-    "Copywriteři teď!",
-    "Volím si tebe...",
-    "Nekecat a přepsat...",
-    "Jedu, jedůůů!",
-    "Fuj, práce...",
-    "To ses moc nevytáhl...",
-    "Prej autor...",
-    "Další hloupost...",
-    "Vááážně?",
-    "Fakt jo?",
-    "Sakra, proč?",
-    "Ne, tohle ne!",
-    "Tohle fakt nedám..."
+    "Time to write...",
+    "Copywriters, now!",
+    "I choose you...",
+    "Less talk, more rewrite...",
+    "Here I gooo!",
+    "Ugh, work...",
+    "You didn't exactly shine...",
+    "So-called author...",
+    "More nonsense...",
+    "Reaaally?",
+    "Seriously?",
+    "Damn, why?",
+    "No, not this!",
+    "I really can't do this..."
 ];
 
 // Helper function to get a random message
@@ -169,13 +169,13 @@ function createImageCard(image) {
                 <img src="/images/${image.image_filename}" class="card-img-top" alt="Generated image">
                 <div class="overlay">
                     <div class="d-flex justify-content-between">
-                        <button class="btn btn-sm btn-outline-light copy-settings" data-image-id="${image.image_filename}" title="Kopírovat nastavení">
+                        <button class="btn btn-sm btn-outline-light copy-settings" data-image-id="${image.image_filename}" title="Copy settings">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-light download-image" data-image-path="/images/${image.image_filename}" title="Stáhnout obrázek">
+                        <button class="btn btn-sm btn-outline-light download-image" data-image-path="/images/${image.image_filename}" title="Download image">
                             <i class="fas fa-download"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger delete-image" data-image-id="${image.image_filename}" title="Smazat obrázek">
+                        <button class="btn btn-sm btn-outline-danger delete-image" data-image-id="${image.image_filename}" title="Delete image">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -236,7 +236,7 @@ async function loadGallery(page = 1) {
         $pagination.html(createPagination(data.total_pages));
         
     } catch (error) {
-        showError('Chyba při načítání galerie: ' + error.message);
+        showError('Error loading gallery: ' + error.message);
     }
 }
 
@@ -247,7 +247,7 @@ function createLabel(paramName, schema) {
     let description = schema.description || '';
     // Add default value info if present
     if (schema.default !== undefined && schema.default !== null) {
-        description += ` (Výchozí: ${schema.default})`;
+        description += ` (Default: ${schema.default})`;
     }
     const tooltip = description ? `data-bs-toggle="tooltip" data-bs-placement="top" title="${description}"` : '';
     return `<label for="param-${paramName}" class="form-label" ${tooltip}>${schema.title || paramName}</label>`;
@@ -339,7 +339,7 @@ function generateFormFields(schema) {
     $modelParamsContainer.empty(); // Clear previous params
     if (!schema || !schema.properties) {
         console.error("Invalid schema received:", schema);
-        $modelParamsContainer.html('<p class="text-danger">Nepodařilo se načíst parametry modelu.</p>');
+        $modelParamsContainer.html('<p class="text-danger">Failed to load model parameters.</p>');
         return;
     }
 
@@ -383,7 +383,7 @@ function generateFormFields(schema) {
     for (const [paramName, paramSchema] of sortedProperties) {
         fieldsHtml += createFormField(paramName, paramSchema);
     }
-    $modelParamsContainer.html(aspectRatioHtml + fieldsHtml || '<p class="text-muted">Tento model nemá žádné další konfigurovatelné parametry.</p>');
+    $modelParamsContainer.html(aspectRatioHtml + fieldsHtml || '<p class="text-muted">This model has no additional configurable parameters.</p>');
 
     // Initialize tooltips for new elements
     const tooltipTriggerList = [].slice.call($modelParamsContainer[0].querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -465,8 +465,8 @@ async function loadModelParams(modelId) {
         $modelParamsContainer.empty();
         return;
     }
-    toggleLoading(true, 'Načítání parametrů...'); // Add text for loading params
-    $modelParamsContainer.html('<p class="text-muted">Načítání parametrů...</p>');
+    toggleLoading(true, 'Loading parameters...'); // Add text for loading params
+    $modelParamsContainer.html('<p class="text-muted">Loading parameters...</p>');
     try {
         // Encode the model ID properly for the URL path
         const encodedModelId = encodeURIComponent(modelId).replace(/%2F/g, '/');
@@ -476,7 +476,7 @@ async function loadModelParams(modelId) {
         if (!response.ok) {
             // Try to parse error from backend response, fallback to status text
             const errorMsg = data?.error || data?.message || response.statusText;
-            throw new Error(`Chyba ${response.status}: ${errorMsg}`);
+            throw new Error(`Error ${response.status}: ${errorMsg}`);
         }
 
         // The response itself should be the schema's 'components.schemas.Input' part
@@ -491,8 +491,8 @@ async function loadModelParams(modelId) {
 
     } catch (error) {
         console.error("Error loading model parameters:", error);
-        showError(`Nepodařilo se načíst parametry pro model ${modelId}: ${error.message}`);
-        $modelParamsContainer.html(`<p class="text-danger">Chyba při načítání parametrů: ${error.message}</p>`);
+        showError(`Failed to load parameters for model ${modelId}: ${error.message}`);
+        $modelParamsContainer.html(`<p class="text-danger">Error loading parameters: ${error.message}</p>`);
     } finally {
         toggleLoading(false);
     }
@@ -503,9 +503,9 @@ async function loadModels() {
     try {
         const response = await fetch('/api/models');
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Neznámá chyba');
+        if (!response.ok) throw new Error(data.error || 'Unknown error');
 
-        $modelSelect.empty().append('<option value="" disabled selected>Vyberte model...</option>'); // Clear and add placeholder
+        $modelSelect.empty().append('<option value="" disabled selected>Select model...</option>'); // Clear and add placeholder
         if (data.models && data.models.length > 0) {
             data.models.forEach(modelId => {
                 // Display a user-friendly name if possible (e.g., extract from ID)
@@ -524,13 +524,13 @@ async function loadModels() {
             loadModelParams($modelSelect.val());
 
         } else {
-            $modelSelect.append('<option value="" disabled>Žádné modely nejsou nakonfigurovány</option>');
+            $modelSelect.append('<option value="" disabled>No models configured</option>');
             $modelSelect.prop('disabled', true);
         }
     } catch (error) {
         console.error("Error loading models:", error);
-        showError('Nepodařilo se načíst seznam modelů: ' + error.message);
-        $modelSelect.empty().append('<option value="" disabled>Chyba načítání modelů</option>').prop('disabled', true);
+        showError('Failed to load model list: ' + error.message);
+        $modelSelect.empty().append('<option value="" disabled>Error loading models</option>').prop('disabled', true);
     }
 }
 
@@ -565,7 +565,7 @@ async function generateImage(prompt, modelId, parameters) {
         
         const data = await response.json();
         if (!response.ok) {
-            const errorMsg = data?.error || data?.message || `Chyba ${response.status}`;
+            const errorMsg = data?.error || data?.message || `Error ${response.status}`;
             throw new Error(errorMsg);
         }
 
@@ -578,7 +578,7 @@ async function generateImage(prompt, modelId, parameters) {
     } catch (error) {
         toggleLoading(false);
         console.error("Error generating image:", error);
-        showError('Chyba při generování obrázku: ' + error.message);
+        showError('Error generating image: ' + error.message);
     }
 }
 
@@ -602,7 +602,7 @@ async function improvePrompt(prompt) {
         saveFormState();
         
     } catch (error) {
-        showError('Chyba při vylepšování promptu: ' + error.message);
+        showError('Error improving prompt: ' + error.message);
     } finally {
         toggleLoading(false);
     }
@@ -621,7 +621,7 @@ async function deleteImage(imageId) {
         loadGallery(currentPage);
         
     } catch (error) {
-        showError('Chyba při mazání obrázku: ' + error.message);
+        showError('Error deleting image: ' + error.message);
     }
 }
 
@@ -792,11 +792,11 @@ $(document).ready(() => {
         });
         
         if (!prompt) {
-            showError('Zadejte prompt pro generování obrázku.');
+            showError('Please enter a prompt to generate an image.');
             return;
         }
         if (!modelId) {
-            showError('Vyberte model pro generování.');
+            showError('Please select a model for generation.');
             return;
         }
 
@@ -815,7 +815,7 @@ $(document).ready(() => {
     $improveBtn.on('click', async () => {
         const prompt = $prompt.val().trim();
         if (!prompt) {
-            showError('Zadejte prompt pro vylepšení');
+            showError('Please enter a prompt to improve.');
             return;
         }
         await improvePrompt(prompt);
@@ -859,7 +859,7 @@ $(document).ready(() => {
             const response = await fetch(`/api/metadata/${cleanImageId}`);
             const data = await response.json();
 
-            if (!response.ok) throw new Error(data.error || 'Neznámá chyba');
+            if (!response.ok) throw new Error(data.error || 'Unknown error');
 
             // Set prompt and model
             $prompt.val(data.original_prompt || data.prompt || ''); // Use original if available
@@ -936,7 +936,7 @@ $(document).ready(() => {
             saveFormState(); // Save the applied prompt and model
 
         } catch (error) {
-            showError('Chyba při kopírování nastavení: ' + error.message);
+            showError('Error copying settings: ' + error.message);
             $modelParamsContainer.empty(); // Clear params on error
         } finally {
             toggleLoading(false);

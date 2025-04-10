@@ -3,10 +3,10 @@ import json
 from unittest.mock import patch, MagicMock
 import os
 import time
-import tempfile # Import pro dočasné soubory
-import shutil # Pro cleanup
+import tempfile # Import for temporary files
+import shutil # For cleanup
 
-# Mock schéma pro detail modelu (podobné jako v unit testech)
+# Mock schema for model detail (similar to unit tests)
 MOCK_MODEL_SCHEMA = {
     "openapi_schema": {
         "components": { "schemas": { "Input": { "type": "object", "properties": {
@@ -19,14 +19,14 @@ MOCK_MODEL_SCHEMA = {
     "description": "Mock integration model description"
 }
 
-# Fixture pro integrační testy - vytváří dočasné adresáře
+# Fixture for integration tests - creates temporary directories
 @pytest.fixture
 def integration_client():
-    # Vytvoříme dočasné adresáře pro storage
+    # Create temporary directories for storage
     temp_image_dir = tempfile.mkdtemp(prefix="repl_test_images_")
     temp_metadata_dir = tempfile.mkdtemp(prefix="repl_test_metadata_")
 
-    # Nastavíme potřebné env proměnné
+    # Set necessary env variables
     mock_models_env = "stability-ai/sdxl:1.0,another/model:2.1"
     env_vars = {
         "REPLICATE_API_TOKEN": "dummy_replicate_token_integration",
@@ -35,25 +35,25 @@ def integration_client():
         "IMAGE_STORAGE_PATH": temp_image_dir,
         "METADATA_STORAGE_PATH": temp_metadata_dir,
     }
-    # Patchujeme env proměnné PŘED importem app
+    # Patch env variables BEFORE importing app
     with patch.dict(os.environ, env_vars, clear=True):
-        # Importujeme app a jeho komponenty ZDE
+        # Import app and its components HERE
         from app import app as flask_app, model_cache, replicate_client, openai_client, image_manager, metadata_manager
 
-        # Vyčistíme cache před každým testem
+        # Clear cache before each test
         model_cache.clear()
 
         flask_app.config.update({"TESTING": True})
 
-        # Patchujeme pouze externí volání API
+        # Patch only external API calls
         with patch.object(replicate_client, 'get_model_details', autospec=True) as mock_get_details, \
              patch.object(replicate_client, 'generate_image', autospec=True) as mock_generate_image, \
              patch.object(openai_client, 'translate_to_english', autospec=True) as mock_translate, \
              patch.object(openai_client, 'improve_prompt', autospec=True) as mock_improve:
 
-            # Vytvoříme test klienta
+            # Create test client
             with flask_app.test_client() as test_client:
-                # Yield klienta a slovník s mockovanými API voláními
+                # Yield client and dictionary with mocked API calls
                 yield test_client, {
                     "get_model_details": mock_get_details,
                     "generate_image": mock_generate_image,
@@ -63,12 +63,12 @@ def integration_client():
                     "metadata_dir": temp_metadata_dir,
                 }
 
-    # Cleanup: Odstraníme dočasné adresáře po skončení testu
+    # Cleanup: Remove temporary directories after the test finishes
     shutil.rmtree(temp_image_dir, ignore_errors=True)
     shutil.rmtree(temp_metadata_dir, ignore_errors=True)
 
 
-# --- Integrační testy ---
+# --- Integration Tests ---
 
 def test_full_flow_dynamic_params(integration_client):
     """
@@ -85,25 +85,25 @@ def test_full_flow_dynamic_params(integration_client):
     original_prompt = "Integrační test kočky"
     translated_prompt = "Integration test cat"
     dynamic_params = {"negative_prompt": "pes", "guidance_scale": 7}
-    mock_replicate_image_path = None # Inicializace
+    mock_replicate_image_path = None # Initialization
 
     try:
-        # --- Krok 3: Vytvoření dočasného souboru (v binárním režimu) ---
-        # Použijeme mkstemp pro získání cesty a file descriptoru
+        # --- Step 3: Create temporary file (in binary mode) ---
+        # Use mkstemp to get path and file descriptor
         fd, mock_replicate_image_path = tempfile.mkstemp(suffix=".webp")
         with os.fdopen(fd, 'wb') as tmp_file:
-            tmp_file.write(b"dummy image data") # Zapíšeme binární data
+            tmp_file.write(b"dummy image data") # Write binary data
 
-        # --- Konfigurace mocků pro tento test ---
+        # --- Mock configuration for this test ---
         mocks["get_model_details"].return_value = MOCK_MODEL_SCHEMA
         mocks["translate_to_english"].return_value = translated_prompt
         mocks["generate_image"].return_value = {
             'status': 'success',
-            'image_path': mock_replicate_image_path, # Cesta k našemu dočasnému souboru
+            'image_path': mock_replicate_image_path, # Path to our temporary file
             'metadata': {}
         }
 
-        # --- Krok 1: Získání seznamu modelů ---
+        # --- Step 1: Get list of models ---
         response_models = test_client.get('/api/models')
         assert response_models.status_code == 200
         models_data = json.loads(response_models.data)
@@ -111,14 +111,14 @@ def test_full_flow_dynamic_params(integration_client):
         assert model_id_to_use in models_data['models']
 
 
-        # --- Krok 2: Získání detailů modelu ---
+        # --- Step 2: Get model details ---
         response_details = test_client.get(f'/api/models/{model_id_to_use}')
         assert response_details.status_code == 200
         details_data = json.loads(response_details.data)
         assert details_data == MOCK_MODEL_SCHEMA
         mocks["get_model_details"].assert_called_once_with(model_id_to_use)
 
-        # --- Krok 4: Generování obrázku ---
+        # --- Step 4: Generate image ---
         request_data = {
             "prompt": original_prompt,
             "model_id": model_id_to_use,
@@ -126,7 +126,7 @@ def test_full_flow_dynamic_params(integration_client):
         }
         response_generate = test_client.post('/api/generate-image', json=request_data)
 
-        # --- Krok 5: Ověření odpovědi a volání API ---
+        # --- Step 5: Verify response and API calls ---
         assert response_generate.status_code == 200
         generate_data = json.loads(response_generate.data)
         assert generate_data['status'] == 'success'
@@ -141,18 +141,18 @@ def test_full_flow_dynamic_params(integration_client):
             input_params=dynamic_params
         )
 
-        # --- Krok 6: Ověření uložení souborů ---
+        # --- Step 6: Verify file saving ---
         image_path = os.path.join(mocks['image_dir'], f"{image_id}.webp")
         metadata_path = os.path.join(mocks['metadata_dir'], f"{image_id}.json")
 
-        # Dáme systému chvilku na uložení souborů
-        time.sleep(0.1) # Vrátíme zpět kratší čekání
+        # Give the system a moment to save the files
+        time.sleep(0.1) # Revert to shorter wait
 
-        # Nyní by soubory měly existovat
+        # Now the files should exist
         assert os.path.exists(image_path), f"Image file not found at: {image_path}"
         assert os.path.exists(metadata_path), f"Metadata file not found at: {metadata_path}"
 
-        # Kontrola obsahu metadat
+        # Check metadata content
         with open(metadata_path, 'r') as f:
             saved_metadata = json.load(f)
         assert saved_metadata['original_prompt'] == original_prompt
@@ -162,11 +162,11 @@ def test_full_flow_dynamic_params(integration_client):
         assert saved_metadata['image_filename'] == f"{image_id}.webp"
 
     finally:
-        # Cleanup dočasného souboru vytvořeného v testu, pokud existuje
+        # Cleanup temporary file created in the test, if it exists
         if mock_replicate_image_path and os.path.exists(mock_replicate_image_path):
             os.remove(mock_replicate_image_path)
 
 
-# TODO: Přidat integrační test pro ověření původní funkcionality (improve prompt, atd.)
+# TODO: Add integration test to verify original functionality (improve prompt, etc.)
 # def test_original_functionality(integration_client):
 #    pass
