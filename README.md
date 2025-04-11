@@ -2,7 +2,26 @@
 
 Web application for generating images using AI models with automatic translation of prompts into English.
 
-## Installation
+## Automatic installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/pendialek/replicate-ai.git
+cd replicate-ai
+```
+
+2. Create and activate a virtual environment:
+```bash
+sudo ./app.sh --install
+```
+
+3. Create a .env file based on the .env.example template and fill in the necessary API keys:
+```bash
+cp .env.example .env
+```
+   - **Important:** In the `.env` file, set the `REPLICATE_MODELS` variable with a list of models from Replicate that you want to use. Separate models with a comma (e.g., `owner/model-name:version,another/model:version`). See `.env.example` for the format.
+
+## Manual installation
 
 1. Clone the repository:
 ```bash
@@ -45,7 +64,14 @@ The user interface then dynamically loads the parameters for each selected model
 ./app.sh --debug # Or: FLASK_ENV=development python app.py
 ```
 
-## Production Deployment
+## Automatic Production Deployment
+
+1. Run the application using Gunicorn:
+```bash
+./app.sh --production
+```
+
+## Manual Production Deployment
 
 1. Set production variables in .env:
 ```env
@@ -78,7 +104,6 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
 
 ## Security
 
-- HTTPS in production
 - Rate limiting
 - Security headers
 - CORS protection

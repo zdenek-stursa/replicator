@@ -85,7 +85,7 @@ case "$1" in
 
     # Set Flask environment to development for debug mode
     export FLASK_ENV=development
-    # export FLASK_DEBUG=1 # Can be enabled if needed
+    export FLASK_DEBUG=1 # Can be enabled if needed
 
     echo "Starting Flask development server (typically on http://127.0.0.1:5000)..."
     # Run Flask development server from the virtual environment
