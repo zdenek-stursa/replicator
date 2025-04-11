@@ -149,6 +149,13 @@
                 padding-right: 0;
             }
         }
+
+            .image-modal .modal-close,
+            .image-modal .modal-nav-prev,
+            .image-modal .modal-nav-next {
+                display: none !important; /* Hide controls on mobile */
+                pointer-events: none; /* Disable interaction */
+            }
         
         .image-modal {
             position: fixed;
