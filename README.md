@@ -6,8 +6,8 @@ Web application for generating images using AI models with automatic translation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/pendialek/replicate-ai.git
-cd replicate-ai
+git clone https://github.com/zdenek-stursa/replicator.git
+cd replicator
 ```
 
 2. Create and activate a virtual environment:
@@ -25,8 +25,8 @@ cp .env.example .env
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/pendialek/replicate-ai.git
-cd replicate-ai
+git clone https://github.com/zdenek-stursa/replicator.git
+cd replicator
 ```
 
 2. Create and activate a virtual environment:

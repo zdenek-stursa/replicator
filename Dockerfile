@@ -31,7 +31,7 @@ WORKDIR /app
 
 # Clone the repository inside the container
 # Ensure git is installed (added in the previous RUN command)
-RUN git clone https://github.com/pendialek/replicator.git . && \
+RUN git clone https://github.com/zdenek-stursa/replicator.git . && \
     # Optional: remove .git directory if not needed in the final image
     rm -rf .git
 
