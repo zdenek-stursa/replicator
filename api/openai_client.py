@@ -1,7 +1,14 @@
 from openai import OpenAI
-from openai.types.error import AuthenticationError, RateLimitError
 import logging
 from typing import Optional
+
+# Import error types based on OpenAI version
+try:
+    # For newer versions of OpenAI API
+    from openai.types.error import AuthenticationError, RateLimitError
+except ImportError:
+    # For older versions of OpenAI API
+    from openai.error import AuthenticationError, RateLimitError
 
 logger = logging.getLogger(__name__)
 
