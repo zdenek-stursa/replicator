@@ -2,13 +2,14 @@ from openai import OpenAI
 import logging
 from typing import Optional
 
-# Import error types based on OpenAI version
-try:
-    # For newer versions of OpenAI API
-    from openai.types.error import AuthenticationError, RateLimitError
-except ImportError:
-    # For older versions of OpenAI API
-    from openai.error import AuthenticationError, RateLimitError
+# Define custom error classes for compatibility
+class AuthenticationError(Exception):
+    """Authentication error for OpenAI API"""
+    pass
+
+class RateLimitError(Exception):
+    """Rate limit error for OpenAI API"""
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -58,17 +59,23 @@ class OpenAIClient:
             logger.info(f"Translated prompt: {translated_prompt}")
             return translated_prompt
 
-        except AuthenticationError as e:
-            logger.error(f"OpenAI API authentication error: {str(e)}", exc_info=True)
-            raise ValueError("OpenAI API key is missing or invalid. Please check your configuration.") from e
-
-        except RateLimitError as e:
-            logger.error(f"OpenAI API rate limit exceeded: {str(e)}", exc_info=True)
-            raise
-
         except Exception as e:
-            logger.error(f"Error translating prompt: {str(e)}", exc_info=True)
-            raise
+            error_message = str(e).lower()
+
+            # Check for authentication errors based on error message
+            if "authentication" in error_message or "api key" in error_message or "invalid" in error_message or "incorrect" in error_message:
+                logger.error(f"OpenAI API authentication error: {str(e)}", exc_info=True)
+                raise ValueError("OpenAI API key is missing or invalid. Please check your configuration.") from e
+
+            # Check for rate limit errors based on error message
+            elif "rate limit" in error_message or "too many requests" in error_message:
+                logger.error(f"OpenAI API rate limit exceeded: {str(e)}", exc_info=True)
+                raise RateLimitError(f"OpenAI API rate limit exceeded: {str(e)}") from e
+
+            # Other errors
+            else:
+                logger.error(f"Error translating prompt: {str(e)}", exc_info=True)
+                raise
 
     def improve_prompt(self, prompt: str) -> str:
         """
@@ -110,14 +117,20 @@ class OpenAIClient:
             logger.info(f"Improved prompt: {improved_prompt}")
             return improved_prompt
 
-        except AuthenticationError as e:
-            logger.error(f"OpenAI API authentication error: {str(e)}", exc_info=True)
-            raise ValueError("OpenAI API key is missing or invalid. Please check your configuration.") from e
-
-        except RateLimitError as e:
-            logger.error(f"OpenAI API rate limit exceeded: {str(e)}", exc_info=True)
-            raise
-
         except Exception as e:
-            logger.error(f"Error improving prompt: {str(e)}", exc_info=True)
-            raise
+            error_message = str(e).lower()
+
+            # Check for authentication errors based on error message
+            if "authentication" in error_message or "api key" in error_message or "invalid" in error_message or "incorrect" in error_message:
+                logger.error(f"OpenAI API authentication error: {str(e)}", exc_info=True)
+                raise ValueError("OpenAI API key is missing or invalid. Please check your configuration.") from e
+
+            # Check for rate limit errors based on error message
+            elif "rate limit" in error_message or "too many requests" in error_message:
+                logger.error(f"OpenAI API rate limit exceeded: {str(e)}", exc_info=True)
+                raise RateLimitError(f"OpenAI API rate limit exceeded: {str(e)}") from e
+
+            # Other errors
+            else:
+                logger.error(f"Error improving prompt: {str(e)}", exc_info=True)
+                raise
