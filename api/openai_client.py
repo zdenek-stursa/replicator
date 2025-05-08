@@ -1,4 +1,5 @@
 from openai import OpenAI
+from openai.types.error import AuthenticationError, RateLimitError
 import logging
 from typing import Optional
 
@@ -14,12 +15,17 @@ class OpenAIClient:
     def translate_to_english(self, prompt: str) -> str:
         """
         Translate the prompt to English using GPT-4
-        
+
         Args:
             prompt (str): Original prompt to translate
-            
+
         Returns:
             str: English translation of the prompt
+
+        Raises:
+            ValueError: If API key is missing or invalid
+            RateLimitError: If OpenAI rate limit is exceeded
+            Exception: For other errors
         """
         try:
             system_message = """You are a professional translator.
@@ -41,9 +47,17 @@ class OpenAIClient:
             )
 
             translated_prompt = completion.choices[0].message.content.strip()
-            
+
             logger.info(f"Translated prompt: {translated_prompt}")
             return translated_prompt
+
+        except AuthenticationError as e:
+            logger.error(f"OpenAI API authentication error: {str(e)}", exc_info=True)
+            raise ValueError("OpenAI API key is missing or invalid. Please check your configuration.") from e
+
+        except RateLimitError as e:
+            logger.error(f"OpenAI API rate limit exceeded: {str(e)}", exc_info=True)
+            raise
 
         except Exception as e:
             logger.error(f"Error translating prompt: {str(e)}", exc_info=True)
@@ -52,12 +66,17 @@ class OpenAIClient:
     def improve_prompt(self, prompt: str) -> str:
         """
         Improve the image generation prompt using GPT-4
-        
+
         Args:
             prompt (str): Original prompt to improve
-            
+
         Returns:
             str: Improved prompt
+
+        Raises:
+            ValueError: If API key is missing or invalid
+            RateLimitError: If OpenAI rate limit is exceeded
+            Exception: For other errors
         """
         try:
             system_message = """You are an expert at writing prompts for AI image generation.
@@ -80,9 +99,17 @@ class OpenAIClient:
             )
 
             improved_prompt = completion.choices[0].message.content.strip()
-            
+
             logger.info(f"Improved prompt: {improved_prompt}")
             return improved_prompt
+
+        except AuthenticationError as e:
+            logger.error(f"OpenAI API authentication error: {str(e)}", exc_info=True)
+            raise ValueError("OpenAI API key is missing or invalid. Please check your configuration.") from e
+
+        except RateLimitError as e:
+            logger.error(f"OpenAI API rate limit exceeded: {str(e)}", exc_info=True)
+            raise
 
         except Exception as e:
             logger.error(f"Error improving prompt: {str(e)}", exc_info=True)

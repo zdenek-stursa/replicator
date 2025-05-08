@@ -281,6 +281,15 @@ def improve_prompt():
         improved_prompt = openai_client.improve_prompt(prompt)
         return jsonify({'improved_prompt': improved_prompt})
 
+    except ValueError as e:
+        # Handle authentication errors and other validation errors
+        logger.error(f"API key or validation error: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'Configuration error',
+            'message': str(e),
+            'type': 'ConfigurationError'
+        }), 401  # Use 401 for authentication errors
+
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e

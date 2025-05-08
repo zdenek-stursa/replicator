@@ -101,6 +101,7 @@ const $modelSelect = $('#modelSelect'); // Changed ID
 const $modelParamsContainer = $('#modelParamsContainer'); // Added container for dynamic params
 const $generateBtn = $('#generateBtn');
 const $improveBtn = $('#improvePrompt');
+const $clearBtn = $('#clearPrompt');
 const $gallery = $('#imageGallery');
 const $pagination = $('#galleryPagination');
 const $spinner = $('#spinnerOverlay');
@@ -138,7 +139,27 @@ function saveFormState() {
 
 // Show error in modal
 function showError(message) {
-    $('#errorMessage').text(message);
+    const $errorHelp = $('#errorHelp');
+
+    // Check if the message contains API Configuration Error
+    if (message.includes('API Configuration Error')) {
+        // Format the message for better readability
+        const formattedMessage = message
+            .replace('API Configuration Error: ', '<strong>Configuration Error:</strong><br>')
+            .replace('OpenAI API key is missing or invalid', '<span class="text-danger">OpenAI API key is missing or invalid</span>');
+
+        $('#errorMessage').html(formattedMessage);
+
+        // Show troubleshooting help for API configuration errors
+        $errorHelp.removeClass('d-none');
+    } else {
+        // For other errors, just use text
+        $('#errorMessage').text(message);
+
+        // Hide troubleshooting help for other errors
+        $errorHelp.addClass('d-none');
+    }
+
     errorModal.show();
 }
 
@@ -150,12 +171,14 @@ function toggleLoading(show, text = '') { // Added text parameter
         $spinner.css('display', 'flex');
         $generateBtn.prop('disabled', true);
         $improveBtn.prop('disabled', true); // Disable improve button too
+        $clearBtn.prop('disabled', true); // Disable clear button too
         isGenerating = true;
     } else {
         $spinnerText.text(''); // Clear the text
         $spinner.css('display', 'none');
         $generateBtn.prop('disabled', false);
         $improveBtn.prop('disabled', false); // Re-enable improve button
+        $clearBtn.prop('disabled', false); // Re-enable clear button
         isGenerating = false;
     }
 }
@@ -188,7 +211,7 @@ function createImageCard(image) {
 // Create pagination
 function createPagination(totalPages) {
     let html = '';
-    
+
     // Previous button
     html += `
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
@@ -197,7 +220,7 @@ function createPagination(totalPages) {
             </a>
         </li>
     `;
-    
+
     // Page numbers
     for (let i = 1; i <= totalPages; i++) {
         html += `
@@ -206,7 +229,7 @@ function createPagination(totalPages) {
             </li>
         `;
     }
-    
+
     // Next button
     html += `
         <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
@@ -215,7 +238,7 @@ function createPagination(totalPages) {
             </a>
         </li>
     `;
-    
+
     return html;
 }
 
@@ -224,17 +247,17 @@ async function loadGallery(page = 1) {
     try {
         const response = await fetch(`/api/images?page=${page}`);
         const data = await response.json();
-        
+
         if (!response.ok) throw new Error(data.error);
-        
+
         $gallery.empty();
         data.images.forEach(image => {
             $gallery.append(createImageCard(image));
         });
-        
+
         currentPage = page;
         $pagination.html(createPagination(data.total_pages));
-        
+
     } catch (error) {
         showError('Error loading gallery: ' + error.message);
     }
@@ -562,7 +585,7 @@ async function generateImage(prompt, modelId, parameters) {
             },
             body: JSON.stringify(payload)
         });
-        
+
         const data = await response.json();
         if (!response.ok) {
             const errorMsg = data?.error || data?.message || `Error ${response.status}`;
@@ -586,7 +609,7 @@ async function generateImage(prompt, modelId, parameters) {
 async function improvePrompt(prompt) {
     try {
         toggleLoading(true, getRandomMessage(IMPROVE_MESSAGES)); // Use random message
-        
+
         const response = await fetch('/api/improve-prompt', {
             method: 'POST',
             headers: {
@@ -594,14 +617,22 @@ async function improvePrompt(prompt) {
             },
             body: JSON.stringify({ prompt })
         });
-        
+
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        
+        if (!response.ok) {
+            // Handle different error types
+            if (response.status === 401 && data.type === 'ConfigurationError') {
+                throw new Error('API Configuration Error: ' + data.message);
+            } else {
+                throw new Error(data.error || data.message || 'Unknown error');
+            }
+        }
+
         $prompt.val(data.improved_prompt);
         saveFormState();
-        
+
     } catch (error) {
+        console.error("Error improving prompt:", error);
         showError('Error improving prompt: ' + error.message);
     } finally {
         toggleLoading(false);
@@ -614,12 +645,12 @@ async function deleteImage(imageId) {
         const response = await fetch(`/api/image/${imageId}`, {
             method: 'DELETE'
         });
-        
+
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
-        
+
         loadGallery(currentPage);
-        
+
     } catch (error) {
         showError('Error deleting image: ' + error.message);
     }
@@ -753,12 +784,12 @@ function handleTouchEnd(e) {
 $(document).ready(() => {
     loadModels(); // Load models first, which then loads form state and initial params
     loadGallery(); // Load initial gallery view
-    
+
     // Form submission
     $form.on('submit', async (e) => {
         e.preventDefault();
         if (isGenerating) return;
-        
+
         const prompt = $prompt.val().trim();
         const modelId = $modelSelect.val();
         const parameters = {};
@@ -790,7 +821,7 @@ $(document).ready(() => {
                 parameters[name] = value;
             }
         });
-        
+
         if (!prompt) {
             showError('Please enter a prompt to generate an image.');
             return;
@@ -810,7 +841,7 @@ $(document).ready(() => {
         loadModelParams(selectedModelId);
         saveFormState(); // Save the newly selected model
     });
-    
+
     // Improve prompt button
     $improveBtn.on('click', async () => {
         const prompt = $prompt.val().trim();
@@ -820,7 +851,13 @@ $(document).ready(() => {
         }
         await improvePrompt(prompt);
     });
-    
+
+    // Clear prompt button
+    $clearBtn.on('click', () => {
+        $prompt.val(''); // Clear the textarea content
+        saveFormState(); // Save the empty state
+    });
+
     // Pagination clicks
     $pagination.on('click', '.page-link', async (e) => {
         e.preventDefault();
@@ -829,7 +866,7 @@ $(document).ready(() => {
             await loadGallery(page);
         }
     });
-    
+
     // Delete modal already initialized globally
     let imageToDelete = null;
 
@@ -848,7 +885,7 @@ $(document).ready(() => {
             imageToDelete = null;
         }
     });
-    
+
     // Copy settings (Simplified - only copies prompt and selects model)
     // TODO: Extend to set dynamic parameters after they are loaded
     $gallery.on('click', '.copy-settings', async (e) => {
@@ -942,7 +979,7 @@ $(document).ready(() => {
             toggleLoading(false);
         }
     });
-    
+
     // Download image
     $gallery.on('click', '.download-image', (e) => {
         const imagePath = $(e.currentTarget).data('image-path');
