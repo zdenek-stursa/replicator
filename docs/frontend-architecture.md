@@ -81,15 +81,15 @@ export async function generateImage(prompt, modelId, parameters) {
 }
 ```
 
-#### `modal-navigation.js`
-- Image modal functionality
-- Keyboard and touch navigation
-- Swipe gesture detection
-- Modal state management
+#### `photoswipe-gallery.js`
+- PhotoSwipe lightbox integration
+- Image gallery functionality with proper aspect ratios
+- Automatic dimension detection for images
+- Professional image viewing experience
 
 ```javascript
-export function openImageModal(imageSrc) {
-    // Opens image in modal with navigation
+export async function openPhotoSwipeGallery(imageSrc) {
+    // Opens PhotoSwipe lightbox with proper image dimensions
 }
 ```
 

@@ -4,7 +4,7 @@ import { showError, toggleLoading, initializeUIElements } from './modules/ui.js'
 import { loadGallery, initializeGalleryElements, getCurrentPage } from './modules/gallery.js';
 import { applyParamValue, initializeFormGeneratorElements, parseRatio } from './modules/form-generator.js';
 import { loadModels, loadModelParams, generateImage, improvePrompt, deleteImage, initializeAPIClientElements } from './modules/api-client.js';
-import { openImageModal, closeImageModal, showModalImage, initializeModalElements, getCurrentModalIndex } from './modules/modal-navigation.js';
+import { openPhotoSwipeGallery, initializePhotoSwipeElements, isPhotoSwipeAvailable } from './modules/photoswipe-gallery.js';
 
 // Global state
 let isGenerating = false;
@@ -25,10 +25,6 @@ const $pagination = $('#galleryPagination');
 const $spinner = $('#spinnerOverlay');
 const errorModal = new bootstrap.Modal('#errorModal');
 const deleteModal = new bootstrap.Modal('#deleteModal');
-const $imageModal = $('#imageModal');
-const $modalImage = $('#modalImage');
-const $modalNavPrev = $('.modal-nav-prev');
-const $modalNavNext = $('.modal-nav-next');
 
 
 
@@ -42,7 +38,7 @@ function initializeModules() {
     initializeGalleryElements($gallery, $pagination);
     initializeFormGeneratorElements($modelParamsContainer);
     initializeAPIClientElements($prompt, $modelSelect, $modelParamsContainer);
-    initializeModalElements($imageModal, $modalImage, $gallery);
+    initializePhotoSwipeElements($gallery);
 }
 
 // Application initialization
@@ -245,34 +241,18 @@ $(document).ready(async () => {
         document.body.removeChild(link);
     });
 
-    // Image modal functionality
-    $gallery.off('click', '.card-img-top').on('click', '.card-img-top', function(e) {
+    // Image gallery functionality with PhotoSwipe
+    $gallery.off('click', '.card-img-top').on('click', '.card-img-top', async function(e) {
         e.stopPropagation();
         const imageSrc = $(this).attr('src');
-        openImageModal(imageSrc);
-    });
 
-    // Modal navigation
-    $modalNavPrev.off('click').on('click', (e) => {
-        e.stopPropagation();
-        showModalImage(getCurrentModalIndex() - 1);
-    });
-
-    $modalNavNext.off('click').on('click', (e) => {
-        e.stopPropagation();
-        showModalImage(getCurrentModalIndex() + 1);
-    });
-
-    // Close modal
-    $imageModal.off('click').on('click', function(e) {
-        if (!$(e.target).closest('.modal-nav').length && !$(e.target).closest('.modal-close').length) {
-            closeImageModal();
+        // Check if PhotoSwipe is available, fallback to opening in new tab
+        if (isPhotoSwipeAvailable()) {
+            await openPhotoSwipeGallery(imageSrc);
+        } else {
+            console.warn('PhotoSwipe not available, opening image in new tab');
+            window.open(imageSrc, '_blank');
         }
-    });
-
-    $('.modal-close').off('click').on('click', function(e) {
-         e.stopPropagation();
-         closeImageModal();
     });
 
     // Form input changes

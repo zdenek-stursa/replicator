@@ -94,7 +94,7 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
   - Prompt enhancement for better image generation
   - Support for multiple providers: OpenAI, Anthropic, xAI, Groq, Mistral, and more
   - Easy model switching via environment configuration
-- **Image Gallery**: View previously generated images with metadata
+- **Image Gallery**: View previously generated images with metadata and PhotoSwipe lightbox
 - **Aspect Ratio Support**: Select from predefined aspect ratios or set custom dimensions
 - **Rate Limiting**: Built-in API protection with configurable limits
 - **Security**: Security headers, CORS protection, and secure cookie settings
@@ -138,6 +138,24 @@ LLM_MODEL=mistral/mistral-7b-instruct
 
 **Note**: Special model versions (e.g., `gpt-4-1-2025-04-14`) are automatically mapped to standard names for compatibility.
 
+## Image Gallery with PhotoSwipe
+
+The application uses PhotoSwipe v5.4.4 for professional image viewing experience:
+
+### Features
+- **Keyboard Navigation**: Arrow keys for navigation, Escape to close
+- **Touch/Swipe Support**: Full touch gesture support on mobile devices
+- **Zoom Functionality**: Zoom up to 3x including 1:1 pixel viewing
+- **Proper Aspect Ratios**: Automatic detection of image dimensions to prevent distortion
+- **Responsive Design**: Optimized for both desktop and mobile viewing
+- **Smooth Animations**: Professional fade transitions and zoom effects
+
+### Technical Implementation
+- Uses PhotoSwipe UMD version loaded from CDN
+- Automatic image dimension detection using `Image` objects
+- Asynchronous loading for optimal performance
+- Fallback to new tab if PhotoSwipe fails to load
+
 ## Rate Limits
 
 - Image generation: 5 requests/minute
@@ -157,7 +175,7 @@ The frontend uses a modular ES6 architecture for better maintainability and code
 - **`gallery.js`** - Image gallery management and pagination
 - **`form-generator.js`** - Dynamic form generation and aspect ratio handling
 - **`api-client.js`** - API communication and data fetching
-- **`modal-navigation.js`** - Image modal with keyboard and touch navigation
+- **`photoswipe-gallery.js`** - PhotoSwipe lightbox integration with automatic image dimension detection
 - **`main.js`** - Application initialization and event handling
 
 ### Benefits
