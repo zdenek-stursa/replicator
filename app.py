@@ -6,10 +6,19 @@ from pythonjsonlogger import jsonlogger
 from dotenv import load_dotenv
 import logging
 import os
+import warnings
 from functools import wraps
 from flask import abort
 from logging.handlers import RotatingFileHandler
 from werkzeug.exceptions import HTTPException # Import HTTPException
+
+# Suppress Pydantic V2 deprecation warnings from external libraries
+warnings.filterwarnings(
+    "ignore",
+    category=DeprecationWarning,
+    module="pydantic._internal._config",
+    message="Support for class-based `config` is deprecated.*"
+)
 
 # Load environment variables from .env file
 load_dotenv()
