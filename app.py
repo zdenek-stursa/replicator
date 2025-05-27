@@ -52,7 +52,8 @@ limiter = Limiter(
 # Load configuration
 app.config.update(
     REPLICATE_API_TOKEN=os.getenv('REPLICATE_API_TOKEN'),
-    OPENAI_API_KEY=os.getenv('OPENAI_API_KEY'),
+    LLM_API_KEY=os.getenv('OPENAI_API_KEY'),  # Keep OPENAI_API_KEY for backward compatibility
+    LLM_MODEL=os.getenv('LLM_MODEL', 'gpt-4'),
     IMAGE_STORAGE_PATH=os.getenv('IMAGE_STORAGE_PATH', os.path.join(os.path.dirname(__file__), 'images')), # Use getenv with default
     METADATA_STORAGE_PATH=os.getenv('METADATA_STORAGE_PATH', os.path.join(os.path.dirname(__file__), 'metadata')), # Use getenv with default
     REPLICATE_MODELS=os.getenv('REPLICATE_MODELS', '').split(',') if os.getenv('REPLICATE_MODELS') else []
@@ -61,19 +62,19 @@ app.config.update(
 # Validate required environment variables
 if not app.config['REPLICATE_API_TOKEN']:
     raise ValueError("REPLICATE_API_TOKEN environment variable is required")
-if not app.config['OPENAI_API_KEY']:
-    raise ValueError("OPENAI_API_KEY environment variable is required")
+if not app.config['LLM_API_KEY']:
+    raise ValueError("OPENAI_API_KEY environment variable is required (used for LLM operations)")
 if not app.config['REPLICATE_MODELS']:
     logger.warning("REPLICATE_MODELS environment variable is not set or empty. Model selection will be unavailable.")
 
 # Import API clients after environment variables are loaded
 from api.replicate_client import ReplicateClient
-from api.openai_client import OpenAIClient
+from api.llm_client import LLMClient
 from utils.storage import ImageManager, MetadataManager
 
 # Initialize clients and managers
 replicate_client = ReplicateClient(app.config['REPLICATE_API_TOKEN'])
-openai_client = OpenAIClient(app.config['OPENAI_API_KEY'])
+llm_client = LLMClient(app.config['LLM_API_KEY'], app.config['LLM_MODEL'])
 image_manager = ImageManager(app.config['IMAGE_STORAGE_PATH'])
 metadata_manager = MetadataManager(app.config['METADATA_STORAGE_PATH'])
 
@@ -232,7 +233,7 @@ def generate_image():
             logger.warning(f"Generate image request for invalid model: {model_id}")
             abort(400, description=f"Model '{model_id}' not found or not configured.")
 
-        translated_prompt = openai_client.translate_to_english(prompt)
+        translated_prompt = llm_client.translate_to_english(prompt)
 
         logger.info(f"Generating image with model '{model_id}' and parameters: {parameters}")
         result = replicate_client.generate_image(
@@ -278,7 +279,7 @@ def improve_prompt():
         if not prompt:
              abort(400, description="Prompt is required")
 
-        improved_prompt = openai_client.improve_prompt(prompt)
+        improved_prompt = llm_client.improve_prompt(prompt)
         return jsonify({'improved_prompt': improved_prompt})
 
     except ValueError as e:

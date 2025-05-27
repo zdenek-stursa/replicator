@@ -22,16 +22,18 @@ def client():
     env_vars = {
         "REPLICATE_API_TOKEN": "dummy_replicate_token",
         "OPENAI_API_KEY": "dummy_openai_key",
+        "LLM_MODEL": "gpt-4",
     }
     # Patch env variables BEFORE importing app
     with patch.dict(os.environ, env_vars, clear=True):
         # Import app and its components HERE
-        from app import app as flask_app, model_cache, replicate_client, openai_client, image_manager, metadata_manager
+        from app import app as flask_app, model_cache, replicate_client, llm_client, image_manager, metadata_manager
 
         # Override config after app initialization
         flask_app.config['REPLICATE_MODELS'] = EXPECTED_RAW_MODELS_LIST
         flask_app.config['REPLICATE_API_TOKEN'] = "dummy_replicate_token"
-        flask_app.config['OPENAI_API_KEY'] = "dummy_openai_key"
+        flask_app.config['LLM_API_KEY'] = "dummy_openai_key"
+        flask_app.config['LLM_MODEL'] = "gpt-4"
         flask_app.config['IMAGE_STORAGE_PATH'] = '/tmp/test_images'
         flask_app.config['METADATA_STORAGE_PATH'] = '/tmp/test_metadata'
 
@@ -43,8 +45,8 @@ def client():
         # Patch METHODS on imported INSTANCES
         with patch.object(replicate_client, 'get_model_details', autospec=True) as mock_get_details, \
              patch.object(replicate_client, 'generate_image', autospec=True) as mock_generate_image, \
-             patch.object(openai_client, 'translate_to_english', autospec=True) as mock_translate, \
-             patch.object(openai_client, 'improve_prompt', autospec=True) as mock_improve, \
+             patch.object(llm_client, 'translate_to_english', autospec=True) as mock_translate, \
+             patch.object(llm_client, 'improve_prompt', autospec=True) as mock_improve, \
              patch.object(image_manager, 'save_image_from_file', autospec=True) as mock_save_image, \
              patch.object(metadata_manager, 'save_metadata', autospec=True) as mock_save_meta, \
              patch.object(metadata_manager, 'list_images', autospec=True) as mock_list_images, \

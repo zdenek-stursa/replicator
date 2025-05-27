@@ -87,13 +87,45 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
 
 ## Features
 
-- Image generation using various AI models (configurable via `.env`)
-- Dynamic loading and display of parameters for the selected model
-- Automatic translation of prompts into English using ChatGPT
-- Prompt enhancement using ChatGPT
-- Rate limiting for API protection
-- Security headers and CORS protection
-- File logging with rotation
+- **Image Generation**: Generate images using various AI models from Replicate (configurable via `.env`)
+- **Model Selection**: Choose from multiple pre-configured models with dynamic parameter loading
+- **Multi-LLM Support**: Flexible LLM integration via liteLLM library
+  - Automatic translation of prompts into English
+  - Prompt enhancement for better image generation
+  - Support for multiple providers: OpenAI, Anthropic, xAI, Groq, Mistral, and more
+  - Easy model switching via environment configuration
+- **Image Gallery**: View previously generated images with metadata
+- **Aspect Ratio Support**: Select from predefined aspect ratios or set custom dimensions
+- **Rate Limiting**: Built-in API protection with configurable limits
+- **Security**: Security headers, CORS protection, and secure cookie settings
+- **Responsive Design**: Works on desktop and mobile devices
+- **Comprehensive Logging**: File logging with rotation for debugging and monitoring
+
+## LLM Configuration
+
+The application uses liteLLM for flexible LLM provider support. Configure your preferred model via the `LLM_MODEL` environment variable:
+
+```bash
+# OpenAI models (default)
+LLM_MODEL=gpt-4
+LLM_MODEL=gpt-4-turbo
+LLM_MODEL=gpt-3.5-turbo
+
+# Anthropic Claude
+LLM_MODEL=claude-3-opus-20240229
+LLM_MODEL=claude-3-sonnet-20240229
+
+# xAI Grok
+LLM_MODEL=xai/grok-beta
+
+# Groq
+LLM_MODEL=groq/llama3-8b-8192
+
+# Mistral
+LLM_MODEL=mistral/mistral-7b-instruct
+```
+
+**Note**: Special model versions (e.g., `gpt-4-1-2025-04-14`) are automatically mapped to standard names for compatibility.
 
 ## Rate Limits
 
