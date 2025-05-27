@@ -132,7 +132,7 @@ def test_end_to_end_flow(client, mocker):
     # Mock external calls
     mocker.patch("api.replicate_client.ReplicateClient.get_model_params", return_value=[...]) # Provide mock params
     mocker.patch("api.replicate_client.ReplicateClient.run_model", return_value={"image": "output_url"})
-    mocker.patch("api.openai_client.improve_prompt", return_value="enhanced prompt")
+    mocker.patch("api.llm_client.improve_prompt", return_value="enhanced prompt")
     mocker.patch("api.translator.translate", return_value="translated prompt")
     mocker.patch("utils.storage.save_image", return_value="saved_image.png")
     mocker.patch("utils.storage.save_metadata")

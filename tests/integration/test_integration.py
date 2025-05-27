@@ -167,6 +167,3 @@ def test_full_flow_dynamic_params(integration_client):
             os.remove(mock_replicate_image_path)
 
 
-# TODO: Add integration test to verify original functionality (improve prompt, etc.)
-# def test_original_functionality(integration_client):
-#    pass

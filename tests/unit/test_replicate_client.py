@@ -160,9 +160,3 @@ def test_get_model_details_unexpected_error(mock_replicate_models, replicate_cli
     assert details_schema is None
 
 
-# Test for generate_image (to be added later)
-# @patch('api.replicate_client.replicate.run')
-# @patch('api.replicate_client.requests.get')
-# @patch('api.replicate_client.tempfile.NamedTemporaryFile')
-# def test_generate_image_success(mock_tempfile, mock_requests_get, mock_replicate_run, replicate_client_instance):
-#     pass

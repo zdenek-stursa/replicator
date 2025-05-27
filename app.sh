@@ -181,7 +181,7 @@ except ImportError as e:
             SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
             # Replace placeholder with generated secret key using sudo with the user's context
             sudo -u "$SUDO_USER" sed -i "s/your_secret_key_here/$SECRET_KEY/" .env
-            echo "Created .env file. Please update API keys (REPLICATE_API_TOKEN, OPENAI_API_KEY) in .env."
+            echo "Created .env file. Please update API keys (REPLICATE_API_TOKEN, LLM API key) in .env."
         else
             echo "Warning: .env.example not found. Cannot create .env automatically."
             echo "Please create a .env file manually with necessary configurations."

@@ -49,7 +49,7 @@ RUN python3 -m venv venv && \
 # Virtual environment creation and dependency installation happens after cloning
 
 # Verify key packages are installed correctly within the venv
-RUN python3 -c "import flask; import replicate; import openai; import redis; import gunicorn; print('All key packages verified successfully!')"
+RUN python3 -c "import flask; import replicate; import litellm; import redis; import gunicorn; print('All key packages verified successfully!')"
 
 # Create necessary directories if they don't exist
 RUN mkdir -p /app/images /app/metadata
