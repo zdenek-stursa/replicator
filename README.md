@@ -100,6 +100,7 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
 - **Security**: Security headers, CORS protection, and secure cookie settings
 - **Responsive Design**: Works on desktop and mobile devices
 - **Comprehensive Logging**: File logging with rotation for debugging and monitoring
+- **Modular Frontend Architecture**: ES6 modules for better code organization and maintainability
 
 ## LLM Configuration
 
@@ -143,6 +144,29 @@ LLM_MODEL=mistral/mistral-7b-instruct
 - Prompt enhancement: 10 requests/minute
 - Gallery listing: 30 requests/minute
 - Image download: 60 requests/minute
+
+## Frontend Architecture
+
+The frontend uses a modular ES6 architecture for better maintainability and code organization:
+
+### JavaScript Modules
+
+- **`constants.js`** - Application constants and configuration
+- **`storage.js`** - localStorage management and form state persistence
+- **`ui.js`** - UI utilities (error handling, loading states, notifications)
+- **`gallery.js`** - Image gallery management and pagination
+- **`form-generator.js`** - Dynamic form generation and aspect ratio handling
+- **`api-client.js`** - API communication and data fetching
+- **`modal-navigation.js`** - Image modal with keyboard and touch navigation
+- **`main.js`** - Application initialization and event handling
+
+### Benefits
+
+- **Separation of Concerns**: Each module has a specific responsibility
+- **Maintainability**: Smaller, focused files are easier to understand and modify
+- **Reusability**: Modules can be imported and used independently
+- **Testing**: Individual modules can be tested in isolation
+- **Modern Standards**: Uses ES6 import/export syntax
 
 ## Security
 
