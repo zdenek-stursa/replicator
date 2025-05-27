@@ -48,9 +48,8 @@ class LLMClient:
         """
         # Handle special OpenAI model names that might not be recognized
         openai_model_mappings = {
-            "gpt-4-1-2025-04-14": "gpt-4",
-            "gpt-4.1-2025-04-14": "gpt-4",
-            "gpt-4.1": "gpt-4",
+            "gpt-4-1-2025-04-14": "gpt-4.1",
+            "gpt-4.1-2025-04-14": "gpt-4.1",
             "gpt-4-turbo-2024-04-09": "gpt-4-turbo",
             "gpt-4-turbo-preview": "gpt-4-turbo",
         }
@@ -67,8 +66,10 @@ class LLMClient:
 
         # For standard OpenAI models, return as-is
         standard_openai_models = [
-            "gpt-4", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini",
-            "gpt-3.5-turbo", "gpt-3.5-turbo-16k"
+            "gpt-4", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano",
+            "gpt-4-turbo", "gpt-4o", "gpt-4o-mini",
+            "gpt-3.5-turbo", "gpt-3.5-turbo-16k",
+            "o3", "o3-mini", "o4-mini", "o1-mini", "o1-preview"
         ]
 
         if model in standard_openai_models:

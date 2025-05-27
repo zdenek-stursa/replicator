@@ -108,8 +108,18 @@ The application uses liteLLM for flexible LLM provider support. Configure your p
 ```bash
 # OpenAI models (default)
 LLM_MODEL=gpt-4
+LLM_MODEL=gpt-4.1
+LLM_MODEL=gpt-4.1-mini
+LLM_MODEL=gpt-4.1-nano
 LLM_MODEL=gpt-4-turbo
+LLM_MODEL=gpt-4o
+LLM_MODEL=gpt-4o-mini
 LLM_MODEL=gpt-3.5-turbo
+LLM_MODEL=o3
+LLM_MODEL=o3-mini
+LLM_MODEL=o4-mini
+LLM_MODEL=o1-mini
+LLM_MODEL=o1-preview
 
 # Anthropic Claude
 LLM_MODEL=claude-3-opus-20240229

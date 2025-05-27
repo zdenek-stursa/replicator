@@ -86,7 +86,12 @@ class TestLLMClient:
         """Test that different models can be configured"""
         models_to_test = [
             ("gpt-4", "gpt-4"),
+            ("gpt-4.1", "gpt-4.1"),
+            ("gpt-4.1-mini", "gpt-4.1-mini"),
+            ("gpt-4.1-nano", "gpt-4.1-nano"),
             ("gpt-3.5-turbo", "gpt-3.5-turbo"),
+            ("o3", "o3"),
+            ("o3-mini", "o3-mini"),
             ("claude-3-opus-20240229", "claude-3-opus-20240229"),
             ("xai/grok-beta", "xai/grok-beta"),
             ("groq/llama3-8b-8192", "groq/llama3-8b-8192")
@@ -99,10 +104,11 @@ class TestLLMClient:
     def test_model_normalization(self):
         """Test model name normalization for liteLLM compatibility"""
         test_cases = [
-            ("gpt-4-1-2025-04-14", "gpt-4"),
-            ("gpt-4.1-2025-04-14", "gpt-4"),
+            ("gpt-4-1-2025-04-14", "gpt-4.1"),
+            ("gpt-4.1-2025-04-14", "gpt-4.1"),
             ("gpt-4-turbo-2024-04-09", "gpt-4-turbo"),
             ("gpt-4", "gpt-4"),
+            ("gpt-4.1", "gpt-4.1"),
             ("claude-3-opus-20240229", "claude-3-opus-20240229"),
             ("xai/grok-beta", "xai/grok-beta"),
         ]
