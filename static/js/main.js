@@ -5,6 +5,7 @@ import { loadGallery, initializeGalleryElements, getCurrentPage } from './module
 import { applyParamValue, initializeFormGeneratorElements, parseRatio } from './modules/form-generator.js';
 import { loadModels, loadModelParams, generateImage, improvePrompt, deleteImage, downloadConvertedImage, initializeAPIClientElements } from './modules/api-client.js';
 import { openPhotoSwipeGallery, initializePhotoSwipeElements, isPhotoSwipeAvailable } from './modules/photoswipe-gallery.js';
+import { initializeAllMobileDropdownEnhancements } from './modules/mobile-dropdown.js';
 
 // Global state
 let isGenerating = false;
@@ -251,4 +252,7 @@ $(document).ready(async () => {
     $modelParamsContainer.on('input', 'input[type="range"]', function() {
         $(this).siblings('.range-value').text($(this).val());
     });
+
+    // Initialize mobile dropdown enhancements
+    initializeAllMobileDropdownEnhancements();
 });

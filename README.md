@@ -97,7 +97,7 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
   - Support for multiple providers: OpenAI, Anthropic, xAI, Groq, Mistral, and more
   - Easy model switching via environment configuration
 - **Image Gallery**: View previously generated images with metadata and PhotoSwipe lightbox
-- **Image Format Conversion**: Download images in multiple formats (WebP original, JPG 90% quality, PNG without transparency)
+- **Image Format Conversion**: Download images in multiple formats (WebP original, JPG 90% quality, PNG without transparency) with mobile-optimized UI
 - **Aspect Ratio Support**: Select from predefined aspect ratios or set custom dimensions
 - **Rate Limiting**: Built-in API protection with configurable limits
 - **Security**: Security headers, CORS protection, and secure cookie settings
@@ -155,6 +155,7 @@ The application supports on-demand image format conversion with automatic cleanu
 - **Temporary file management**: Converted files are automatically cleaned up after 2 hours
 - **Rate limiting**: 30 conversion requests per minute
 - **Error handling**: Comprehensive error handling with user feedback
+- **Mobile-optimized UI**: Touch-friendly dropdown menu with backdrop and improved positioning
 
 ### API Endpoints
 - `GET /api/convert/<image_id>/jpg` - Convert and download as JPEG
@@ -200,6 +201,7 @@ The frontend uses a modular ES6 architecture for better maintainability and code
 - **`form-generator.js`** - Dynamic form generation and aspect ratio handling
 - **`api-client.js`** - API communication and data fetching
 - **`photoswipe-gallery.js`** - PhotoSwipe lightbox integration with automatic image dimension detection
+- **`mobile-dropdown.js`** - Mobile-optimized dropdown menu enhancements for touch devices
 - **`main.js`** - Application initialization and event handling
 
 ### Benefits

@@ -39,18 +39,18 @@ export function createImageCard(image) {
                             <i class="fas fa-copy"></i>
                         </button>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Download image">
+                            <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Download image" data-bs-auto-close="true">
                                 <i class="fas fa-download"></i>
                             </button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item download-original" href="/images/${image.image_filename}" download="${imageId}.webp">
-                                    <i class="fas fa-file-image me-2"></i>WebP (Original)
+                                    <i class="fas fa-file-image me-2"></i><span>WebP (Original)</span>
                                 </a></li>
                                 <li><a class="dropdown-item download-converted" href="#" data-image-id="${imageId}" data-format="jpg">
-                                    <i class="fas fa-file-image me-2"></i>JPG (90% quality)
+                                    <i class="fas fa-file-image me-2"></i><span>JPG (90% quality)</span>
                                 </a></li>
                                 <li><a class="dropdown-item download-converted" href="#" data-image-id="${imageId}" data-format="png">
-                                    <i class="fas fa-file-image me-2"></i>PNG (no transparency)
+                                    <i class="fas fa-file-image me-2"></i><span>PNG (no transparency)</span>
                                 </a></li>
                             </ul>
                         </div>
