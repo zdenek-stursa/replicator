@@ -9,9 +9,6 @@ import { openPhotoSwipeGallery, initializePhotoSwipeElements, isPhotoSwipeAvaila
 // Global state
 let isGenerating = false;
 
-
-
-
 // DOM Elements
 const $form = $('#generationForm');
 const $prompt = $('#prompt');
@@ -25,11 +22,6 @@ const $pagination = $('#galleryPagination');
 const $spinner = $('#spinnerOverlay');
 const errorModal = new bootstrap.Modal('#errorModal');
 const deleteModal = new bootstrap.Modal('#deleteModal');
-
-
-
-
-
 
 // Initialize modules with DOM elements
 function initializeModules() {

@@ -20,6 +20,7 @@ sudo ./app.sh --install
 cp .env.example .env
 ```
    - **Important:** In the `.env` file, set the `REPLICATE_MODELS` variable with a list of models from Replicate that you want to use. Separate models with a comma (e.g., `owner/model-name:version,another/model:version`). See `.env.example` for the format.
+   - **Note:** The application uses liteLLM for flexible LLM provider support. Configure your API key for your preferred provider (OpenAI, Anthropic, xAI, etc.) and set the `LLM_MODEL` variable accordingly.
 
 ## Manual installation
 
@@ -45,6 +46,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
    - **Important:** In the `.env` file, set the `REPLICATE_MODELS` variable with a list of models from Replicate that you want to use. Separate models with a comma (e.g., `owner/model-name:version,another/model:version`). See `.env.example` for the format.
+   - **Note:** The application uses liteLLM for flexible LLM provider support. Configure your API key for your preferred provider (OpenAI, Anthropic, xAI, etc.) and set the `LLM_MODEL` variable accordingly.
 
 ## Model Configuration
 

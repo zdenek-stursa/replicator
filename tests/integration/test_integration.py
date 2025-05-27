@@ -38,7 +38,7 @@ def integration_client():
     # Patch env variables BEFORE importing app
     with patch.dict(os.environ, env_vars, clear=True):
         # Import app and its components HERE
-        from app import app as flask_app, model_cache, replicate_client, openai_client, image_manager, metadata_manager
+        from app import app as flask_app, model_cache, replicate_client, llm_client, image_manager, metadata_manager
 
         # Clear cache before each test
         model_cache.clear()
@@ -48,8 +48,8 @@ def integration_client():
         # Patch only external API calls
         with patch.object(replicate_client, 'get_model_details', autospec=True) as mock_get_details, \
              patch.object(replicate_client, 'generate_image', autospec=True) as mock_generate_image, \
-             patch.object(openai_client, 'translate_to_english', autospec=True) as mock_translate, \
-             patch.object(openai_client, 'improve_prompt', autospec=True) as mock_improve:
+             patch.object(llm_client, 'translate_to_english', autospec=True) as mock_translate, \
+             patch.object(llm_client, 'improve_prompt', autospec=True) as mock_improve:
 
             # Create test client
             with flask_app.test_client() as test_client:

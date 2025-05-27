@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class ReplicateClient:
     """Client for interacting with Replicate API"""
-    
+
     # SUPPORTED_MODELS dictionary is removed as models are now dynamic
 
     def __init__(self, api_token: str):
@@ -43,7 +43,7 @@ class ReplicateClient:
 
             # Log API parameters
             logger.info(f"Calling Replicate API for model '{model_id}' with input: {input_params}")
-            
+
             # Run the model
             # Run the model using the full model ID and the provided input parameters
             output = replicate.run(
@@ -74,7 +74,7 @@ class ReplicateClient:
                 for chunk in response.iter_content(chunk_size=8192):
                     temp_file.write(chunk)
                 temp_file.flush() # Ensure all data is written
-                
+
                 # Return the path to the temporary file
                 return {
                     'status': 'success',
@@ -129,9 +129,7 @@ class ReplicateClient:
                 return None
 
             # Extract the input schema
-            # schema = version.get_transformed_schema() # Use helper for cleaner schema - Seems deprecated or incorrect
             schema = version.openapi_schema
-            # input_schema = schema.get('components', {}).get('schemas', {}).get('Input', None)
 
             if not schema:
                 logger.error(f"Could not retrieve schema for model version: {model_id}/{version.id}")

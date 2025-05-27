@@ -55,11 +55,8 @@ def test_get_model_details_success(mock_replicate_models, replicate_client_insta
     mock_replicate_models.get.side_effect = None
     # Set the return value for the mocked call to replicate.models.get
     mock_model_success = MagicMock()
-    mock_model_success.latest_version.get_transformed_schema.return_value = MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value
+    mock_model_success.latest_version.openapi_schema = MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value
     mock_replicate_models.get.return_value = mock_model_success
-    # Reset call for get_transformed_schema if it was called in a previous test
-    mock_model_success.latest_version.get_transformed_schema.reset_mock()
-
 
     # Call the method under test
     details_schema = replicate_client_instance.get_model_details(model_id)
@@ -67,10 +64,7 @@ def test_get_model_details_success(mock_replicate_models, replicate_client_insta
     # Verify that the mocked method replicate.models.get was called with the correct argument
     mock_replicate_models.get.assert_called_once_with(model_id)
 
-    # Verify that the get_transformed_schema method was called on the returned object
-    mock_model_success.latest_version.get_transformed_schema.assert_called_once()
-
-    # Verify the returned schema (it should be what get_transformed_schema returned)
+    # Verify the returned schema (it should be what openapi_schema returned)
     assert details_schema is not None
     assert details_schema == MOCK_API_RESPONSE.latest_version.get_transformed_schema.return_value
     assert "openapi_schema" in details_schema # Just a basic structure check
@@ -128,9 +122,9 @@ def test_get_model_details_no_schema(mock_replicate_models, replicate_client_ins
     """
     model_id = "owner/model-without-schema"
 
-    # Create a mock model object with a version, but get_transformed_schema returns None
+    # Create a mock model object with a version, but openapi_schema returns None
     mock_model_no_schema = MagicMock()
-    mock_model_no_schema.latest_version.get_transformed_schema.return_value = None
+    mock_model_no_schema.latest_version.openapi_schema = None
 
     # Set the return value for the mocked call to replicate.models.get
     mock_replicate_models.get.return_value = mock_model_no_schema
@@ -141,9 +135,6 @@ def test_get_model_details_no_schema(mock_replicate_models, replicate_client_ins
 
     # Verify that the mocked method replicate.models.get was called
     mock_replicate_models.get.assert_called_once_with(model_id)
-
-    # Verify that the get_transformed_schema method was called
-    mock_model_no_schema.latest_version.get_transformed_schema.assert_called_once()
 
     # Verify that the method returned None
     assert details_schema is None

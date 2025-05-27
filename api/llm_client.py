@@ -79,6 +79,36 @@ class LLMClient:
         logger.warning(f"Unknown model '{model}', assuming OpenAI provider")
         return model
 
+    def _handle_llm_error(self, e: Exception, operation: str) -> None:
+        """
+        Handle LLM API errors with consistent error checking and logging
+
+        Args:
+            e (Exception): The exception that occurred
+            operation (str): Description of the operation that failed
+
+        Raises:
+            ValueError: If API key is missing or invalid
+            RateLimitError: If LLM rate limit is exceeded
+            Exception: For other errors
+        """
+        error_message = str(e).lower()
+
+        # Check for authentication errors based on error message
+        if "authentication" in error_message or "api key" in error_message or "invalid" in error_message or "incorrect" in error_message:
+            logger.error(f"LLM API authentication error during {operation}: {str(e)}", exc_info=True)
+            raise ValueError("LLM API key is missing or invalid. Please check your configuration.") from e
+
+        # Check for rate limit errors based on error message
+        elif "rate limit" in error_message or "too many requests" in error_message:
+            logger.error(f"LLM API rate limit exceeded during {operation}: {str(e)}", exc_info=True)
+            raise RateLimitError(f"LLM API rate limit exceeded: {str(e)}") from e
+
+        # Other errors
+        else:
+            logger.error(f"Error during {operation}: {str(e)}", exc_info=True)
+            raise
+
     def translate_to_english(self, prompt: str) -> str:
         """
         Translate the prompt to English using the configured LLM
@@ -119,22 +149,7 @@ class LLMClient:
             return translated_prompt
 
         except Exception as e:
-            error_message = str(e).lower()
-
-            # Check for authentication errors based on error message
-            if "authentication" in error_message or "api key" in error_message or "invalid" in error_message or "incorrect" in error_message:
-                logger.error(f"LLM API authentication error: {str(e)}", exc_info=True)
-                raise ValueError("LLM API key is missing or invalid. Please check your configuration.") from e
-
-            # Check for rate limit errors based on error message
-            elif "rate limit" in error_message or "too many requests" in error_message:
-                logger.error(f"LLM API rate limit exceeded: {str(e)}", exc_info=True)
-                raise RateLimitError(f"LLM API rate limit exceeded: {str(e)}") from e
-
-            # Other errors
-            else:
-                logger.error(f"Error translating prompt: {str(e)}", exc_info=True)
-                raise
+            self._handle_llm_error(e, "prompt translation")
 
     def improve_prompt(self, prompt: str) -> str:
         """
@@ -177,19 +192,4 @@ class LLMClient:
             return improved_prompt
 
         except Exception as e:
-            error_message = str(e).lower()
-
-            # Check for authentication errors based on error message
-            if "authentication" in error_message or "api key" in error_message or "invalid" in error_message or "incorrect" in error_message:
-                logger.error(f"LLM API authentication error: {str(e)}", exc_info=True)
-                raise ValueError("LLM API key is missing or invalid. Please check your configuration.") from e
-
-            # Check for rate limit errors based on error message
-            elif "rate limit" in error_message or "too many requests" in error_message:
-                logger.error(f"LLM API rate limit exceeded: {str(e)}", exc_info=True)
-                raise RateLimitError(f"LLM API rate limit exceeded: {str(e)}") from e
-
-            # Other errors
-            else:
-                logger.error(f"Error improving prompt: {str(e)}", exc_info=True)
-                raise
+            self._handle_llm_error(e, "prompt improvement")

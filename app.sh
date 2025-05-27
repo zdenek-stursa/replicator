@@ -155,7 +155,7 @@ import sys
 try:
     import flask
     import replicate
-    import openai
+    import litellm
     import redis
     import gunicorn
     print('All key packages verified successfully!')
