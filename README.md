@@ -97,6 +97,7 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
   - Support for multiple providers: OpenAI, Anthropic, xAI, Groq, Mistral, and more
   - Easy model switching via environment configuration
 - **Image Gallery**: View previously generated images with metadata and PhotoSwipe lightbox
+- **Image Format Conversion**: Download images in multiple formats (WebP original, JPG 90% quality, PNG without transparency)
 - **Aspect Ratio Support**: Select from predefined aspect ratios or set custom dimensions
 - **Rate Limiting**: Built-in API protection with configurable limits
 - **Security**: Security headers, CORS protection, and secure cookie settings
@@ -140,6 +141,26 @@ LLM_MODEL=mistral/mistral-7b-instruct
 
 **Note**: Special model versions (e.g., `gpt-4-1-2025-04-14`) are automatically mapped to standard names for compatibility.
 
+## Image Format Conversion
+
+The application supports on-demand image format conversion with automatic cleanup:
+
+### Supported Formats
+- **WebP (Original)**: Direct download of the original image from Replicate
+- **JPEG**: Converted with 90% quality compression, transparency removed
+- **PNG**: Converted without transparency support
+
+### Features
+- **On-demand conversion**: Images are converted only when requested
+- **Temporary file management**: Converted files are automatically cleaned up after 2 hours
+- **Rate limiting**: 30 conversion requests per minute
+- **Error handling**: Comprehensive error handling with user feedback
+
+### API Endpoints
+- `GET /api/convert/<image_id>/jpg` - Convert and download as JPEG
+- `GET /api/convert/<image_id>/png` - Convert and download as PNG
+- `GET /api/temp-files-info` - Get temporary files statistics (debugging)
+
 ## Image Gallery with PhotoSwipe
 
 The application uses PhotoSwipe v5.4.4 for professional image viewing experience:
@@ -164,6 +185,7 @@ The application uses PhotoSwipe v5.4.4 for professional image viewing experience
 - Prompt enhancement: 10 requests/minute
 - Gallery listing: 30 requests/minute
 - Image download: 60 requests/minute
+- Image conversion: 30 requests/minute
 
 ## Frontend Architecture
 

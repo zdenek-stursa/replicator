@@ -26,6 +26,8 @@ export function getCurrentPage() {
 
 // Create image card
 export function createImageCard(image) {
+    const imageId = image.image_filename.replace(/\.(webp|png)$/, '');
+
     return `
         <div class="col-md-4 col-lg-3 mb-4">
             <div class="card image-card">
@@ -36,9 +38,22 @@ export function createImageCard(image) {
                         <button class="btn btn-sm btn-outline-light copy-settings" data-image-id="${image.image_filename}" title="Copy settings">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-light download-image" data-image-path="/images/${image.image_filename}" title="Download image">
-                            <i class="fas fa-download"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Download image">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item download-original" href="/images/${image.image_filename}" download="${imageId}.webp">
+                                    <i class="fas fa-file-image me-2"></i>WebP (Original)
+                                </a></li>
+                                <li><a class="dropdown-item download-converted" href="#" data-image-id="${imageId}" data-format="jpg">
+                                    <i class="fas fa-file-image me-2"></i>JPG (90% quality)
+                                </a></li>
+                                <li><a class="dropdown-item download-converted" href="#" data-image-id="${imageId}" data-format="png">
+                                    <i class="fas fa-file-image me-2"></i>PNG (no transparency)
+                                </a></li>
+                            </ul>
+                        </div>
                         <button class="btn btn-sm btn-outline-danger delete-image" data-image-id="${image.image_filename}" title="Delete image">
                             <i class="fas fa-trash"></i>
                         </button>

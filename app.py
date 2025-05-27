@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, render_template
+from flask import Flask, jsonify, request, send_from_directory, render_template, send_file
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -80,12 +80,14 @@ if not app.config['REPLICATE_MODELS']:
 from api.replicate_client import ReplicateClient
 from api.llm_client import LLMClient
 from utils.storage import ImageManager, MetadataManager
+from utils.image_converter import ImageConverter
 
 # Initialize clients and managers
 replicate_client = ReplicateClient(app.config['REPLICATE_API_TOKEN'])
 llm_client = LLMClient(app.config['LLM_API_KEY'], app.config['LLM_MODEL'])
 image_manager = ImageManager(app.config['IMAGE_STORAGE_PATH'])
 metadata_manager = MetadataManager(app.config['METADATA_STORAGE_PATH'])
+image_converter = ImageConverter()
 
 # Ensure storage directories exist
 os.makedirs(app.config['IMAGE_STORAGE_PATH'], exist_ok=True)
@@ -357,6 +359,62 @@ def delete_image(image_id):
             raise e
         logger.error(f"Error deleting image: {str(e)}", exc_info=True)
         abort(500, description='Error deleting image')
+
+@app.route('/api/convert/<image_id>/<format>')
+@limiter.limit("30/minute")
+def convert_and_download_image(image_id, format):
+    """Convert and download image in specified format"""
+    try:
+        # Validate format
+        if format not in ['jpg', 'png']:
+            abort(400, description="Unsupported format. Use 'jpg' or 'png'")
+
+        # Check if original image exists
+        image_filename = f"{image_id}.webp"
+        image_path = os.path.join(app.config['IMAGE_STORAGE_PATH'], image_filename)
+
+        if not os.path.isfile(image_path):
+            abort(404, description="Image not found")
+
+        # Convert image
+        try:
+            if format == 'jpg':
+                converted_path = image_converter.convert_to_jpg(image_path, quality=90)
+                mimetype = 'image/jpeg'
+                download_filename = f"{image_id}.jpg"
+            else:  # format == 'png'
+                converted_path = image_converter.convert_to_png(image_path)
+                mimetype = 'image/png'
+                download_filename = f"{image_id}.png"
+
+            # Send file and let cleanup handle removal
+            return send_file(
+                converted_path,
+                mimetype=mimetype,
+                as_attachment=True,
+                download_name=download_filename
+            )
+
+        except ValueError as e:
+            logger.error(f"Image conversion failed for {image_id}: {str(e)}")
+            abort(500, description=f"Image conversion failed: {str(e)}")
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        logger.error(f"Error converting image {image_id}: {str(e)}", exc_info=True)
+        abort(500, description='Error converting image')
+
+@app.route('/api/temp-files-info', methods=['GET'])
+@limiter.limit("10/minute")
+def get_temp_files_info():
+    """Get information about temporary files (for debugging)"""
+    try:
+        info = image_converter.get_temp_file_info()
+        return jsonify(info)
+    except Exception as e:
+        logger.error(f"Error getting temp files info: {str(e)}", exc_info=True)
+        abort(500, description='Error getting temp files info')
 
 @app.route('/images/<filename>')
 @limiter.limit("60/minute")

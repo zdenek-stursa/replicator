@@ -22,7 +22,7 @@ export async function loadModels() {
         console.warn('Model select element not initialized');
         return null;
     }
-    
+
     try {
         const response = await fetch('/api/models');
         const data = await response.json();
@@ -58,10 +58,10 @@ export async function loadModelParams(modelId) {
         }
         return;
     }
-    
+
     toggleLoading(true, 'Loading parameters...');
     $modelParamsContainer.html('<p class="text-muted">Loading parameters...</p>');
-    
+
     try {
         // Encode the model ID properly for the URL path
         const encodedModelId = encodeURIComponent(modelId).replace(/%2F/g, '/');
@@ -102,7 +102,7 @@ export async function generateImage(prompt, modelId, parameters) {
             model_id: modelId,
             parameters: parameters
         };
-        
+
         // Add aspect_ratio: "custom" if width and height are being sent
         if (payload.parameters.hasOwnProperty('width') && payload.parameters.hasOwnProperty('height')) {
              payload.parameters.aspect_ratio = "custom";
@@ -140,7 +140,7 @@ export async function improvePrompt(prompt) {
         console.warn('Prompt element not initialized');
         return;
     }
-    
+
     try {
         toggleLoading(true, getRandomMessage(IMPROVE_MESSAGES));
 
@@ -187,5 +187,35 @@ export async function deleteImage(imageId) {
 
     } catch (error) {
         showError('Error deleting image: ' + error.message);
+    }
+}
+
+// Download converted image
+export async function downloadConvertedImage(imageId, format) {
+    try {
+        // Show loading state
+        const loadingMessages = {
+            'jpg': 'Converting to JPEG...',
+            'png': 'Converting to PNG...'
+        };
+
+        toggleLoading(true, loadingMessages[format] || 'Converting image...');
+
+        // Create download URL
+        const downloadUrl = `/api/convert/${imageId}/${format}`;
+
+        // Create temporary link and trigger download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${imageId}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toggleLoading(false);
+
+    } catch (error) {
+        toggleLoading(false);
+        showError(`Error downloading ${format.toUpperCase()} image: ` + error.message);
     }
 }

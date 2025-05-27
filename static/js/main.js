@@ -3,7 +3,7 @@ import { loadFormState, saveFormState, initializeStorageElements } from './modul
 import { showError, toggleLoading, initializeUIElements } from './modules/ui.js';
 import { loadGallery, initializeGalleryElements, getCurrentPage } from './modules/gallery.js';
 import { applyParamValue, initializeFormGeneratorElements, parseRatio } from './modules/form-generator.js';
-import { loadModels, loadModelParams, generateImage, improvePrompt, deleteImage, initializeAPIClientElements } from './modules/api-client.js';
+import { loadModels, loadModelParams, generateImage, improvePrompt, deleteImage, downloadConvertedImage, initializeAPIClientElements } from './modules/api-client.js';
 import { openPhotoSwipeGallery, initializePhotoSwipeElements, isPhotoSwipeAvailable } from './modules/photoswipe-gallery.js';
 
 // Global state
@@ -222,15 +222,12 @@ $(document).ready(async () => {
         }
     });
 
-    // Download image
-    $gallery.on('click', '.download-image', (e) => {
-        const imagePath = $(e.currentTarget).data('image-path');
-        const link = document.createElement('a');
-        link.href = imagePath;
-        link.download = imagePath.split('/').pop();
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    // Download converted image
+    $gallery.on('click', '.download-converted', async (e) => {
+        e.preventDefault();
+        const imageId = $(e.currentTarget).data('image-id');
+        const format = $(e.currentTarget).data('format');
+        await downloadConvertedImage(imageId, format);
     });
 
     // Image gallery functionality with PhotoSwipe
