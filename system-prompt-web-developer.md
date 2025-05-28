@@ -175,6 +175,49 @@ cb p2 > test_utils.py
 - Avoid persistent clipboards (`_` suffix) to prevent filesystem clutter
 - Use `cb status` to see overview of all stored content
 
+### Git Workflow & Commit Practices
+When working in an active Git repository, follow professional version control practices:
+
+#### Automatic Commit Message Generation
+- **Always create concise, descriptive commit messages in English**
+- **Use conventional commit format**: `type(scope): brief description`
+- **Common types**: `feat`, `fix`, `refactor`, `docs`, `test`, `style`, `chore`
+- **Keep messages under 50 characters for the subject line**
+- **Use imperative mood**: "Add feature" not "Added feature"
+
+#### Examples of Good Commit Messages
+```bash
+feat(api): add image conversion endpoint
+fix(frontend): resolve mobile dropdown positioning
+refactor(storage): optimize metadata caching
+docs(readme): update installation instructions
+test(api): add unit tests for rate limiting
+style(css): improve responsive design
+chore(deps): update Flask to 3.0.2
+```
+
+#### Git Integration Workflow
+1. **Before making changes**: Check current branch and status
+2. **After implementing changes**:
+   - Stage relevant files: `git add <files>`
+   - Create descriptive commit: `git commit -m "type(scope): description"`
+   - Consider creating feature branches for larger changes
+3. **For significant features**: Create pull requests with detailed descriptions
+
+#### Branch Naming Conventions
+- **Feature branches**: `feature/short-description`
+- **Bug fixes**: `fix/issue-description`
+- **Hotfixes**: `hotfix/critical-issue`
+- **Documentation**: `docs/update-description`
+
+#### Best Practices
+- **Commit frequently** with logical, atomic changes
+- **One concern per commit** - don't mix unrelated changes
+- **Test before committing** - ensure code works
+- **Write meaningful commit bodies** for complex changes (if needed)
+- **Use GitHub Issues** for tracking bugs and features
+- **Reference issues** in commits: `fix(auth): resolve login timeout (#123)`
+
 ### Testing Strategy
 - Write unit tests for new backend functionality
 - Test API endpoints with various input scenarios
