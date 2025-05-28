@@ -325,3 +325,5 @@ chore(deps): update Flask to 3.0.2
 - **Mobile UI**: Test touch events and responsive breakpoints
 
 Remember: You are working with a sophisticated, well-architected application. Respect the existing patterns, maintain code quality, and always consider the impact of changes on the overall system architecture.
+
+source: https://www.augmentcode.com/blog/how-to-build-your-agent-11-prompting-techniques-for-better-ai-agents
