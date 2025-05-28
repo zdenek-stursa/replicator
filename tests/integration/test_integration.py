@@ -26,12 +26,12 @@ def integration_client():
     temp_image_dir = tempfile.mkdtemp(prefix="repl_test_images_")
     temp_metadata_dir = tempfile.mkdtemp(prefix="repl_test_metadata_")
 
-    # Set necessary env variables
-    mock_models_env = "stability-ai/sdxl:1.0,another/model:2.1"
+    # Set necessary env variables - use current models from .env
+    current_models = os.environ.get('REPLICATE_MODELS', 'black-forest-labs/flux-1.1-pro-ultra,black-forest-labs/flux-1.1-pro')
     env_vars = {
         "REPLICATE_API_TOKEN": "dummy_replicate_token_integration",
         "OPENAI_API_KEY": "dummy_openai_key_integration",
-        "REPLICATE_MODELS": mock_models_env,
+        "REPLICATE_MODELS": current_models,
         "IMAGE_STORAGE_PATH": temp_image_dir,
         "METADATA_STORAGE_PATH": temp_metadata_dir,
     }
@@ -43,7 +43,16 @@ def integration_client():
         # Clear cache before each test
         model_cache.clear()
 
-        flask_app.config.update({"TESTING": True})
+        flask_app.config.update({
+            "TESTING": True,
+            "IMAGE_STORAGE_PATH": temp_image_dir,
+            "METADATA_STORAGE_PATH": temp_metadata_dir
+        })
+
+        # Reinitialize managers with correct paths
+        from utils.storage import ImageManager, MetadataManager
+        image_manager.__init__(temp_image_dir)
+        metadata_manager.__init__(temp_metadata_dir)
 
         # Patch only external API calls
         with patch.object(replicate_client, 'get_model_details', autospec=True) as mock_get_details, \
@@ -81,7 +90,9 @@ def test_full_flow_dynamic_params(integration_client):
     6. Ověří uložení obrázku a metadat (kontrola existence souborů).
     """
     test_client, mocks = integration_client
-    model_id_to_use = "stability-ai/sdxl:1.0"
+    # Use the first model from current configuration
+    current_models = os.environ.get('REPLICATE_MODELS', 'black-forest-labs/flux-1.1-pro-ultra').split(',')
+    model_id_to_use = current_models[0].strip()
     original_prompt = "Integrační test kočky"
     translated_prompt = "Integration test cat"
     dynamic_params = {"negative_prompt": "pes", "guidance_scale": 7}
@@ -142,8 +153,9 @@ def test_full_flow_dynamic_params(integration_client):
         )
 
         # --- Step 6: Verify file saving ---
-        image_path = os.path.join(mocks['image_dir'], f"{image_id}.webp")
-        metadata_path = os.path.join(mocks['metadata_dir'], f"{image_id}.json")
+        # Files are saved to the configured directories from environment variables
+        image_path = os.path.join(os.environ['IMAGE_STORAGE_PATH'], f"{image_id}.webp")
+        metadata_path = os.path.join(os.environ['METADATA_STORAGE_PATH'], f"{image_id}.json")
 
         # Give the system a moment to save the files
         time.sleep(0.1) # Revert to shorter wait

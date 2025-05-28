@@ -22,7 +22,27 @@ class TestConvertAPI:
         """Use existing sample image ID"""
         return "14a65d6e-1447-4d91-9aac-75de2e77f571"
 
-    def test_convert_to_jpg_success(self, client, sample_image_id):
+    @pytest.fixture
+    def create_test_image(self, sample_image_id):
+        """Create a test image file for testing"""
+        import tempfile
+        from PIL import Image
+
+        # Create a simple test image
+        img = Image.new('RGB', (100, 100), color='red')
+
+        # Save to the images directory
+        image_path = os.path.join(app.config['IMAGE_STORAGE_PATH'], f"{sample_image_id}.webp")
+        os.makedirs(os.path.dirname(image_path), exist_ok=True)
+        img.save(image_path, 'WEBP')
+
+        yield image_path
+
+        # Cleanup
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+    def test_convert_to_jpg_success(self, client, sample_image_id, create_test_image):
         """Test successful conversion to JPEG"""
         response = client.get(f'/api/convert/{sample_image_id}/jpg')
 
@@ -31,7 +51,7 @@ class TestConvertAPI:
         assert 'attachment' in response.headers.get('Content-Disposition', '')
         assert f'{sample_image_id}.jpg' in response.headers.get('Content-Disposition', '')
 
-    def test_convert_to_png_success(self, client, sample_image_id):
+    def test_convert_to_png_success(self, client, sample_image_id, create_test_image):
         """Test successful conversion to PNG"""
         response = client.get(f'/api/convert/{sample_image_id}/png')
 
@@ -82,7 +102,7 @@ class TestConvertAPI:
         assert isinstance(data['cleanup_interval_seconds'], int)
 
     @patch('app.image_converter.convert_to_jpg')
-    def test_convert_jpg_error_handling(self, mock_convert, client, sample_image_id):
+    def test_convert_jpg_error_handling(self, mock_convert, client, sample_image_id, create_test_image):
         """Test error handling during JPEG conversion"""
         mock_convert.side_effect = ValueError("Conversion failed")
 
@@ -95,7 +115,7 @@ class TestConvertAPI:
         assert data['type'] == 'InternalServerError'
 
     @patch('app.image_converter.convert_to_png')
-    def test_convert_png_error_handling(self, mock_convert, client, sample_image_id):
+    def test_convert_png_error_handling(self, mock_convert, client, sample_image_id, create_test_image):
         """Test error handling during PNG conversion"""
         mock_convert.side_effect = ValueError("Conversion failed")
 
@@ -107,7 +127,7 @@ class TestConvertAPI:
         assert data['error'] == 'Internal server error'
         assert data['type'] == 'InternalServerError'
 
-    def test_rate_limiting_convert_endpoint(self, client, sample_image_id):
+    def test_rate_limiting_convert_endpoint(self, client, sample_image_id, create_test_image):
         """Test rate limiting on convert endpoint (basic test)"""
         # This test just verifies the endpoint responds normally
         # Full rate limiting testing would require more complex setup
