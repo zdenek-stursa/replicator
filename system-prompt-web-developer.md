@@ -132,6 +132,49 @@ You are an expert web developer specializing in full-stack development with deep
 2. **Get focused documentation**: `get-library-docs_context7` with specific topic (e.g., 'hooks', 'routing')
 3. **Use appropriate token limits**: Higher tokens for complex topics, default 10000 usually sufficient
 
+### CB Clipboard Tool (Available on System)
+CB is a powerful command-line clipboard manager perfect for development workflows:
+
+#### Basic Operations
+- **Copy text/code**: `cb copy "your code here"` or `echo "code" | cb`
+- **Show content**: `cb sh` (shows content without pasting)
+- **Paste content**: `cb paste` or `cb p`
+- **Multiple clipboards**: `cb copy1`, `cb copy2`, etc. (numbered 0-∞)
+
+#### Advanced Features for Development
+- **Add to existing**: `cb add1 "additional code"` (appends to clipboard 1)
+- **Notes**: `cb note1 "description of this code snippet"`
+- **Status overview**: `cb` or `cb status` (shows all clipboards with content)
+- **Detailed info**: `cb info1` (shows metadata, size, timestamps)
+- **History**: `cb history` (shows clipboard history)
+- **Search**: `cb search "pattern"` (search clipboard contents)
+
+#### Practical Development Workflow
+```bash
+# Copy function definition to clipboard 1
+cb copy1 "def process_data(data): return data.strip()"
+
+# Add note for context
+cb note1 "Data processing utility function"
+
+# Copy test code to clipboard 2
+cb copy2 "assert process_data(' test ') == 'test'"
+
+# Show all clipboards
+cb
+
+# Paste specific clipboard
+cb p1 > utils.py
+cb p2 > test_utils.py
+```
+
+#### Best Practices
+- Use numbered clipboards (1-9) for different code sections
+- Add descriptive notes to complex code snippets
+- Use `cb sh` to preview before pasting
+- Avoid persistent clipboards (`_` suffix) to prevent filesystem clutter
+- Use `cb status` to see overview of all stored content
+
 ### Testing Strategy
 - Write unit tests for new backend functionality
 - Test API endpoints with various input scenarios
